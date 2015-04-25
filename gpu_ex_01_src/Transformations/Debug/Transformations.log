@@ -1,0 +1,10 @@
+﻿Build started 24.04.2015 14:07:04.
+     1>Project "C:\Users\Zettman\Dev\GPU1\gpu_ex_01_src\Transformations\Transformations.vcxproj" on node 2 (Build target(s)).
+     1>Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Zettman\Dev\GPU1\gpu_ex_01_src\Debug\Transformations.exe" /INCREMENTAL /NOLOGO /LIBPATH:C:\Lib\freeglut\lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Zettman\Dev\GPU1\gpu_ex_01_src\Debug\Transformations.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Zettman\Dev\GPU1\gpu_ex_01_src\Debug\Transformations.lib" /MACHINE:X86 Debug\transformations.obj
+         Transformations.vcxproj -> C:\Users\Zettman\Dev\GPU1\gpu_ex_01_src\Debug\Transformations.exe
+     1>Done Building Project "C:\Users\Zettman\Dev\GPU1\gpu_ex_01_src\Transformations\Transformations.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.51
