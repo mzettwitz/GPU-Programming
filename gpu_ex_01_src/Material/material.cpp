@@ -17,6 +17,9 @@ float distance = 2.5f;
 float oldX, oldY;
 int motionState;
 
+float toRad(float angle) { return (angle * PI / 180.0f); }
+float angle = 0.0f;
+
 // Enumeration von Farben.
 enum EColor
 {
@@ -35,7 +38,7 @@ GLfloat ambient[4] = {0.1f, 0.1f, 0.1f, 1.0f};
 GLfloat shininess[6] = {1.0f, 2.0f, 4.0f, 8.0f, 16.0f, 32.0f};
 
 // Arrays mit standard Lichteigenschaften
-GLfloat l_ambient[] = {0.0f, 0.0f, 0.0f, 1.0f}; 
+GLfloat l_ambient[] = {1.0f, 1.0f, 1.0f, 1.0f}; 
 GLfloat l_diffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};
 GLfloat l_specular[] = {1.0f, 1.0f, 1.0f, 1.0f};
 
@@ -45,7 +48,7 @@ void applyMaterial(const EColor& colorID)
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse[colorID]);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, specular[colorID]);
 	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
-	glMaterialfv(GL_FRONT, GL_SHININESS, &shininess[colorID]);
+	glMaterialf(GL_FRONT, GL_SHININESS, shininess[colorID]);
 }
 
 // Untergrund zeichen: Ein Viereck
@@ -82,9 +85,9 @@ void display(void)
 	gluLookAt(x, y, z, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
 
-	// TODO: Platzieren eines Punktlichtes, das sich auf einer Kreisbahn mit Radius 2.5f in der Höhe 0.5 um (0,0,0) dreht.
+	// Platzieren eines Punktlichtes, das sich auf einer Kreisbahn mit Radius 2.5f in der Höhe 0.5 um (0,0,0) dreht.
 	// Die Intensität soll quadratisch mit dem Faktor 0.6 abnehmen. (Hinweis: Nutzen Sie dazu die Quadratic Attentuation)
-	GLfloat l1_position[] = { 2.5f, 0.0f, 0.5f, 1.0f };  // <<<<<fixed position for test purposes
+	GLfloat l1_position[] = { cosf(toRad(angle) * 2.5f), 0.5f, sinf(toRad(angle) * 2.5f), 0.5f };
 
 	glLightfv(GL_LIGHT1, GL_AMBIENT, l_ambient);
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, l_diffuse);
@@ -92,24 +95,24 @@ void display(void)
 	glLightfv(GL_LIGHT1, GL_POSITION, l1_position);
 	glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.6f);
 
-	// TODO: Plazieren eines Richtungslichtes aus der Richtung (1,1,1) mit einer Diffusfarbe von (0.2f, 0.2f, 0.2f)
+	// Plazieren eines Richtungslichtes aus der Richtung (1,1,1) mit einer Diffusfarbe von (0.2f, 0.2f, 0.2f)
 	GLfloat l2_diffuse[] = { 0.2f, 0.2f, 0.2f, 1.f };
-	GLfloat l2_position[] = { 1.0f, 1.0f, 1.0f, 0.0f };
+	GLfloat l2_position[] = { -1.0f, -1.0f, -1.0f, 0.f };
 
 	glLightfv(GL_LIGHT2, GL_AMBIENT, l_ambient);
 	glLightfv(GL_LIGHT2, GL_DIFFUSE, l2_diffuse);
 	glLightfv(GL_LIGHT2, GL_SPECULAR, l_specular);
 	glLightfv(GL_LIGHT2, GL_POSITION, l2_position);
 
-	// TODO: Richten eines Spot-Lichtes von (2,2,2) nach (0,0,0) mit einem Cutoff-Winkel von 45°, einem Spot-Exponent von 16 und mit der
+	// Richten eines Spot-Lichtes von (2,2,2) nach (0,0,0) mit einem Cutoff-Winkel von 45°, einem Spot-Exponent von 16 und mit der
 	// Diffusfarbe 'Orange'.
-	GLfloat l3_position[] = { 2.0f, 2.0f, 2.0f, 0.0f };
-	GLfloat l3_direction[] = { 0.f, 0.f, 0.f };
+	GLfloat l3_position[] = { 2.0f, 2.0f, 2.0f, 1.0f };
+	GLfloat l3_direction[] = { -2.f, -2.f, -2.f };
 
 	glLightfv(GL_LIGHT3, GL_AMBIENT, l_ambient);
 	glLightfv(GL_LIGHT3, GL_DIFFUSE, diffuse[Orange]);
 	glLightfv(GL_LIGHT3, GL_SPECULAR, l_specular);
-	glLightfv(GL_LIGHT3, GL_POSITION, l2_position);
+	glLightfv(GL_LIGHT3, GL_POSITION, l3_position);
 	glLightfv(GL_LIGHT3, GL_SPOT_DIRECTION, l3_direction);
 	glLightf(GL_LIGHT3, GL_SPOT_CUTOFF, 45.f);
 	glLightf(GL_LIGHT3, GL_SPOT_EXPONENT, 16.f);
@@ -125,15 +128,38 @@ void display(void)
 	glutSolidTeapot(0.5f);
 	glPopMatrix();
 
-	// TODO: Rote Box rendern bei Position(3.0f, 0.5f, 3.0f) mit Größe 1.0f
+	// Rote Box rendern bei Position(3.0f, 0.5f, 3.0f) mit Größe 1.0f
+	applyMaterial(Red);
+	glPushMatrix();
+	glTranslatef(3.0f, 0.5f, 3.0f);
+	glutSolidCube(1.f);
+	glPopMatrix();
 	
-	// TODO: Grünen Torus rendern bei Position(-3.0f, 0.5f, 3.0f) mit innerem Radius 0.15f, äußerem Radius 0.35f und jeweils 32 Seiten und Ringen
-	
-	// TODO: Violette (Purple) Kugel rendern bei Position(-3.0f, 0.5f, -3.0f) mit Radius 0.5f und jeweils 32 Längen- und Breitensegmenten
-	
-	// TODO: Blauen AUFRECHTEN Kegel rendern bei Position(3.0f, 0.0f, -3.0f) mit Basisradius 0.5, Höhe 1, 32 Ringsegmenten und 4 Höhensegmenten
-	
+	// Grünen Torus rendern bei Position(-3.0f, 0.5f, 3.0f) mit innerem Radius 0.15f, äußerem Radius 0.35f und jeweils 32 Seiten und Ringen
+	applyMaterial(Green);
+	glPushMatrix();
+	glTranslatef(-3.0f, 0.5f, 3.0f);
+	glutSolidTorus(0.15f, 0.35f, 32.f, 32.f);
+	glPopMatrix();
+
+	// Violette (Purple) Kugel rendern bei Position(-3.0f, 0.5f, -3.0f) mit Radius 0.5f und jeweils 32 Längen- und Breitensegmenten
+	applyMaterial(Purple);
+	glPushMatrix();
+	glTranslatef(-3.0f, 0.5f, -3.0f);
+	glutSolidSphere(0.5f, 32.f, 32.f);
+	glPopMatrix();
+
+	// Blauen AUFRECHTEN Kegel rendern bei Position(3.0f, 0.0f, -3.0f) mit Basisradius 0.5, Höhe 1, 32 Ringsegmenten und 4 Höhensegmenten
+	applyMaterial(Blue);
+	glPushMatrix();
+	glTranslatef(3.0f, 0.0f, -3.0f);
+	glRotatef(270.f, 1.f, 0.f, 0.f);
+	glutSolidCone(0.5f, 1.f, 32.f, 4.f);
+	glPopMatrix();
+
 	glutSwapBuffers();	
+
+	angle += 0.25f;
 }
 
 void mouseMotion(int x, int y)
@@ -199,11 +225,11 @@ int main(int argc, char **argv)
 
 	// Aktivieren der zusätzlichen Lichter.
 	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
+	//glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHT1);
 	glEnable(GL_LIGHT2);
 	glEnable(GL_LIGHT3);
-	
+
 	
 	glEnable(GL_DEPTH_TEST);
 
