@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Transformations", "Transformations\Transformations.vcxproj", "{65312A5F-0318-4A10-8554-B46D386A012D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Material", "Material\Material.vcxproj", "{88B5BD81-9358-4521-8ED2-7B2441037DEE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Texture", "Texture\Texture.vcxproj", "{5A8A1658-1B3C-4221-B1D7-C00C11BC5B8E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{65312A5F-0318-4A10-8554-B46D386A012D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{65312A5F-0318-4A10-8554-B46D386A012D}.Debug|Win32.Build.0 = Debug|Win32
+		{65312A5F-0318-4A10-8554-B46D386A012D}.Release|Win32.ActiveCfg = Release|Win32
+		{65312A5F-0318-4A10-8554-B46D386A012D}.Release|Win32.Build.0 = Release|Win32
+		{88B5BD81-9358-4521-8ED2-7B2441037DEE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{88B5BD81-9358-4521-8ED2-7B2441037DEE}.Debug|Win32.Build.0 = Debug|Win32
+		{88B5BD81-9358-4521-8ED2-7B2441037DEE}.Release|Win32.ActiveCfg = Release|Win32
+		{88B5BD81-9358-4521-8ED2-7B2441037DEE}.Release|Win32.Build.0 = Release|Win32
+		{5A8A1658-1B3C-4221-B1D7-C00C11BC5B8E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5A8A1658-1B3C-4221-B1D7-C00C11BC5B8E}.Debug|Win32.Build.0 = Debug|Win32
+		{5A8A1658-1B3C-4221-B1D7-C00C11BC5B8E}.Release|Win32.ActiveCfg = Release|Win32
+		{5A8A1658-1B3C-4221-B1D7-C00C11BC5B8E}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
