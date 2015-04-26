@@ -84,18 +84,37 @@ void display(void)
 
 void keyboard(unsigned char key, int x, int y)
 {
+	// Keyboard input in ASCII
 	// Hinweis: Die Texture Environment Modes können mit der Funktion glTexEnvi gesetzt werden.
 	// 'Target' ist dabei immer GL_TEXTURE_ENV und der Parametername ist GL_TEXTURE_ENV_MODE.
-	// TODO: Bei Taste 1 den Parameter GL_MODULATE als Texture Environment Mode setzen.
-	// TODO: Bei Taste 2 den Parameter GL_REPLACE als Texture Environment Mode setzen.
+	// Bei Taste 1 den Parameter GL_MODULATE als Texture Environment Mode setzen.
+	if (key == 49){
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	}
 
-	// TODO: Bei Taste 3 Texturekoordinaten mit Hilfe des Matrix-Stacks um den Faktor 2 skalieren.
+	// Bei Taste 2 den Parameter GL_REPLACE als Texture Environment Mode setzen.
+	if (key == 50){
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	}
+
+	// Bei Taste 3 Texturekoordinaten mit Hilfe des Matrix-Stacks um den Faktor 2 skalieren.
 	// Hinweis: die Funktion glScalef, glTranslatef etc. beziehen sich immer auf den gerade aktivierten Matrix-Mode.
 		// Wechseln Sie zunächst in der GL_TEXTURE Matrix Mode.
 		// Setzen Sie die Texturmatrix zurück und wenden Sie anschließend die Skalierung an.
 		// Wechseln Sie zurück in die GL_MODELVIEW Matrix Mode.
+	if (key == 51){
+		glMatrixMode(GL_TEXTURE);
+		glLoadIdentity();
+		glScalef(2.f, 2.f, 2.f);
+		glMatrixMode(GL_MODELVIEW);
+	}
 
-	// TODO: Bei Taste 4 die Texture Matrix auf die Einheitsmatrix zurücksetzen.
+	// Bei Taste 4 die Texture Matrix auf die Einheitsmatrix zurücksetzen.
+	if (key == 52){
+		glMatrixMode(GL_TEXTURE);
+		glLoadIdentity();
+		glMatrixMode(GL_MODELVIEW);
+	}
 }
 
 void mouseMotion(int x, int y)
@@ -176,9 +195,13 @@ int main(int argc, char **argv)
 
 	// Laden der Textur
 	texture = loadBMP("rockwall_color.bmp");
-	// TODO: Binden der Textur			
-	// TODO: 2D-Texturierung aktivieren
-
+	
+	// Binden der Textur
+	glBindTexture(GL_TEXTURE_2D, texture);
+	
+	// 2D-Texturierung aktivieren
+	glEnable(GL_TEXTURE_2D);
+	
 	glutMainLoop();
 	return 0;
 }
