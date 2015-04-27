@@ -19,6 +19,7 @@ int motionState;
 
 // Winkel, der sich kontinuierlich erhöht. (Kann für die Bewegungen auf den Kreisbahnen genutzt werden)
 float angle = 0.0f;
+float speed = 1.f;
 
 float toDeg(float angle) { return angle / PI * 180.0f; }
 float toRad(float angle) { return angle * PI / 180.0f; }
@@ -29,13 +30,27 @@ void drawCircle(float radius, int resolution)
 	// Abschalten der Beleuchtung.
 	glDisable(GL_LIGHTING);
 
-	// TODO: Zeichnen eines Kreises. 
-	// Nutzen Sie die Methoden glBegin, glEnd, glVertex3f und ggf. glColor3f um einen GL_LINE_STRIP zu rendern.
+	glBegin(GL_LINE_STRIP);
+	for (int i = 0; i <= resolution; ++i)
+	{ 
+		float alpha = float(i * (360.f / float(resolution)));
+		glVertex3f(radius *cos(toRad(alpha)), 0, radius *sin(toRad(alpha)));
+		glColor3f(1.f, 0.f, 0.f);
+	}
+	glEnd();
 
 	// Anschalten der Beleuchtung.
 	glEnable(GL_LIGHTING);
 }
-
+void drawLine(glVertex3f start, glVertex3f end)
+{
+	glBegin(GL_LINE);
+	start;
+	glColor3f(1.0f,0.0f,0.0f,1.0f);
+	end;
+	glColor3f(1.0f,0.0f,0.0f,1.0f);
+	glEnd();
+}
 void display(void)	
 {
 	// Buffer clearen
@@ -51,33 +66,52 @@ void display(void)
 
 	// Teekanne rendern.
 	glutSolidTeapot(1);
-
-	// TODO: Den Matrix-Stack sichern.	
+	//teapot matrix
+	glPushMatrix();
 	
-		// TODO: Zeichnen der Kugelkreisbahn.			
-		// TODO: Zeichnen der Kugel.
-			// Wenden Sie eine Translation und eine Rotation an, bevor sie die Kugel zeichnen. Sie können die Variable 'angle' für die Rotation verwenden.
-			// Bedenken Sie dabei die richtige Reihenfolge der beiden Transformationen.
-		
-		// TODO: Zeichnen der Würfelkreisbahn.
-			// Hinweis: Der Ursprung des Koordinatensystems befindet sich nun im Zentrum des Würfels.
-			// Drehen Sie das Koordinatensystem um 90° entlang der Achse, die für die Verschiebung des Würfels genutzt wurde.
-			// Danach steht die Würfelkreisbahn senkrecht zur Tangentialrichtung der Kugelkreisbahn.		
-		// TODO: Zeichnen des Würfels.
-			// Wenden Sie die entsprechende Translation und Rotation an, bevor sie den Würfel zeichnen.
+	drawCircle(10.f, 100);
+	glRotatef(angle * speed, 0, 1, 0);
+	glTranslatef(10.f, 0.f, 0.f);
+	glutSolidSphere(1,25,25);
+	
+	glPushMatrix();
+	
+	
+	glRotatef(90.f, 1.f, 0.f, 0.f);
+	drawCircle(5.f, 100);
 
-		// TODO: Zeichnen einer Linie von Würfel zu Kegel.
-				
-		// TODO: Drehung anwenden, sodass Koordinatensystem in Richtung Ursprung orientiert ist. (Hinweis: Implementieren Sie dies zuletzt.)		
+	glRotatef(angle*speed, 0, 1, 0);
+	glTranslatef(5.f, 0.f, 0.f);
+
+	glutSolidCube(1);
 		
-		// TODO: Zeichnen der Linie von Kegel zu Urpsrung.		
-		// TODO: Zeichnen des Kegels.
-		
-	// TODO: Den Matrix-Stack wiederherstellen.	
+
+	//Draw line 
+	GLfloat modelview[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+	glVertex3f startLine = modelview * glVertex3f(0,0,0);
+	glTranslatef(3.f,0.f,0.f);
+	glVertex3f endLine = modelview * glVertex3f(0,0,0);	
+	drawLine(start,end);
+	glTranslatef(3.f, 0.f, 0.f);
+	
+	glPopMatrix();
+	glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+	glPushMatrix();
+	//should be 0,0,0 anyway
+	glVertex3f coneUp = startLine;
+	startLine = modelview * glVertex3f(0,0,0);
+	drawLine(start,end);
+	
+	gluLookat(endLine.x,endLine.y,endLine.z,0,0,0,endLine.x - coneUp.x,endLine.y - coneUp.y,endLine.z - coneUp.z);
+	glutSolidCone(1, 2, 25, 25);
+	
+	glPopMatrix();	
 	
 	glutSwapBuffers();	
 
 	angle += 1.0f / 60.0f;
+	speed += 1.0f / 60.0f;
 }
 
 void mouseMotion(int x, int y)
