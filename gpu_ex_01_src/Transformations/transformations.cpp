@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <GL/freeglut.h>
+#include <stdio.h>
 
 #define PI 3.141592f
 
@@ -10,6 +11,8 @@
 
 int width = 600;
 int height = 600;
+
+bool to = true;
 
 float theta = PI / 2.0f - 0.4f;
 float phi = 0.0f;
@@ -42,16 +45,9 @@ void drawCircle(float radius, int resolution)
 	// Anschalten der Beleuchtung.
 	glEnable(GL_LIGHTING);
 }
-void drawLine(glVertex3f start, glVertex3f end)
-{
-	glBegin(GL_LINE);
-	start;
-	glColor3f(1.0f,0.0f,0.0f,1.0f);
-	end;
-	glColor3f(1.0f,0.0f,0.0f,1.0f);
-	glEnd();
-}
-void display(void)	
+
+
+void display(void)
 {
 	// Buffer clearen
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -64,54 +60,98 @@ void display(void)
 	float z = distance * sin(theta) * sin(phi);
 	gluLookAt(x, y, z, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
+	float model[16];
+	float pos[4] = { 0, 0, 0, 1 };
+	float newPos[4];
+
+	glPushMatrix();
 	// Teekanne rendern.
 	glutSolidTeapot(1);
 	//teapot matrix
-	glPushMatrix();
-	
+
+	//outer rim
 	drawCircle(10.f, 100);
+	//sphere
 	glRotatef(angle * speed, 0, 1, 0);
 	glTranslatef(10.f, 0.f, 0.f);
-	glutSolidSphere(1,25,25);
-	
 	glPushMatrix();
-	
-	
+	glutSolidSphere(1, 25, 25);
+
+
+	glGetFloatv(GL_MODELVIEW_MATRIX, model);
+	newPos[0] = pos[0] * model[0] + pos[1] * model[4] + pos[2] * model[8] + pos[3] * model[12];
+	newPos[1] = pos[0] * model[1] + pos[1] * model[5] + pos[2] * model[9] + pos[3] * model[13];
+	newPos[2] = pos[0] * model[2] + pos[1] * model[6] + pos[2] * model[10] + pos[3] * model[14];
+	newPos[3] = pos[0] * model[3] + pos[1] * model[7] + pos[2] * model[11] + pos[3] * model[15];
+
+	glPopMatrix();
+
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINES);
+	glVertex4f(0, 0, 0, 1);
+	glColor3f(1.f, 0.f, 0.f);
+	glVertex4f(newPos[0], newPos[1], newPos[2], newPos[3]);
+	glColor3f(1.f, 0.f, 0.f);
+	glEnd();
+	glEnable(GL_LIGHTING);
+	glPushMatrix();
+	glLoadMatrixf(model);
+
+	//circle
 	glRotatef(90.f, 1.f, 0.f, 0.f);
 	drawCircle(5.f, 100);
-
+	//cube
 	glRotatef(angle*speed, 0, 1, 0);
 	glTranslatef(5.f, 0.f, 0.f);
 
 	glutSolidCube(1);
-		
 
-	//Draw line 
-	GLfloat modelview[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
-	glVertex3f startLine = modelview * glVertex3f(0,0,0);
-	glTranslatef(3.f,0.f,0.f);
-	glVertex3f endLine = modelview * glVertex3f(0,0,0);	
-	drawLine(start,end);
+
+
+	//Draw line from cube to cone
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINES);
+	glVertex3f(0.f, 0.f, 0.f);
+	glColor3f(1.f, 0.f, 0.f);
+	glVertex3f(3.f, 0.f, 0.f);
+	glColor3f(1.f, 0.f, 0.f);
+	glEnd();
+	glEnable(GL_LIGHTING);
+
 	glTranslatef(3.f, 0.f, 0.f);
-	
+
+	//line from cone to 0,0,0
+	//cone position ??
+	glGetFloatv(GL_MODELVIEW_MATRIX, model);
+
+	newPos[0] = pos[0] * model[0] + pos[1] * model[4] + pos[2] * model[8] + pos[3] * model[12];
+	newPos[1] = pos[0] * model[1] + pos[1] * model[5] + pos[2] * model[9] + pos[3] * model[13];
+	newPos[2] = pos[0] * model[2] + pos[1] * model[6] + pos[2] * model[10] + pos[3] * model[14];
+	newPos[3] = pos[0] * model[3] + pos[1] * model[7] + pos[2] * model[11] + pos[3] * model[15];
+
+	//restore original matrix
 	glPopMatrix();
-	glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
-	glPushMatrix();
-	//should be 0,0,0 anyway
-	glVertex3f coneUp = startLine;
-	startLine = modelview * glVertex3f(0,0,0);
-	drawLine(start,end);
 	
-	gluLookat(endLine.x,endLine.y,endLine.z,0,0,0,endLine.x - coneUp.x,endLine.y - coneUp.y,endLine.z - coneUp.z);
-	glutSolidCone(1, 2, 25, 25);
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINES);
+	glVertex4f(0, 0, 0, 1);
+	glColor3f(1.f, 0.f, 0.f);
+	glVertex4f(newPos[0],newPos[1],newPos[2],newPos[3]);
+	glColor3f(1.f, 0.f, 0.f);
+	glEnd();
+	glEnable(GL_LIGHTING);
+	glPushMatrix();
+	glLoadMatrixf(model);
+
+
+	glutSolidCone(0.5, 1, 25, 25);
 	
 	glPopMatrix();	
 	
 	glutSwapBuffers();	
 
 	angle += 1.0f / 60.0f;
-	speed += 1.0f / 60.0f;
+	//speed += 1.0f / 60.0f;
 }
 
 void mouseMotion(int x, int y)
