@@ -89,8 +89,6 @@ void display(void)
 	// Drehen Sie das Koordinatensystem um 90° entlang der Achse, die für die Verschiebung des Würfels genutzt wurde.
 	// Danach steht die Würfelkreisbahn senkrecht zur Tangentialrichtung der Kugelkreisbahn.
 	glPushMatrix();
-
-
 	glRotatef(90.f, 1.f, 0.f, 0.f);
 	drawCircle(5.f, 100);
 
@@ -98,9 +96,7 @@ void display(void)
 	// Wenden Sie die entsprechende Translation und Rotation an, bevor sie den Würfel zeichnen.
 	glRotatef(angle*speed, 0, 1, 0);
 	glTranslatef(5.f, 0.f, 0.f);
-
 	glutSolidCube(1);
-
 
 	// Zeichnen einer Linie von Würfel zu Kegel.
 	glDisable(GL_LIGHTING);
@@ -112,19 +108,18 @@ void display(void)
 	glEnd();
 	glEnable(GL_LIGHTING);
 
-	// Zeichnen des Kegels.
-	
 
 	// Drehung anwenden, sodass Koordinatensystem in Richtung Ursprung orientiert ist. (Hinweis: Implementieren Sie dies zuletzt.)
 	glTranslatef(3.f, 0.f, 0.f);
-	glRotatef(90 + angle*speed, 0, -1, 0);
+	glRotatef(90 + angle*speed, 0, -1, 0);	//Rotation countering the cube-rotation -> always looking towards the teapot
 
+	// Tangens to look at the oirigin from upside and downside
 	GLfloat length = 10 + 8 * cosf(angle*speed*PI / 180);
 	GLfloat height = 8 * sinf(angle*speed*PI / 180);
 	GLfloat heightangle = 180 / PI*atan(height / length);
 	glRotatef(heightangle, 0, 1, 0);
 
-
+	// Zeichnen des Kegels.
 	glutSolidCone(0.5, 1, 25, 25);
 
 
