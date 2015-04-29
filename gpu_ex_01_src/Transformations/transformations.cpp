@@ -43,17 +43,6 @@ void drawCircle(float radius, int resolution)
 	glEnable(GL_LIGHTING);
 }
 
-/*
-void drawLine(glVertex3f start, glVertex3f end)
-{
-	glBegin(GL_LINE);
-	start;
-	glColor3f(1.0f, 0.0f, 0.0f, 1.0f);
-	end;
-	glColor3f(1.0f, 0.0f, 0.0f, 1.0f);
-	glEnd();
-}
-*/
 
 void display(void)
 {
@@ -88,7 +77,6 @@ void display(void)
 	// Hinweis: Der Ursprung des Koordinatensystems befindet sich nun im Zentrum des Würfels.
 	// Drehen Sie das Koordinatensystem um 90° entlang der Achse, die für die Verschiebung des Würfels genutzt wurde.
 	// Danach steht die Würfelkreisbahn senkrecht zur Tangentialrichtung der Kugelkreisbahn.
-	glPushMatrix();
 	glRotatef(90.f, 1.f, 0.f, 0.f);
 	drawCircle(5.f, 100);
 
@@ -124,43 +112,42 @@ void display(void)
 
 
 	// TODO: Zeichnen der Linie von Kegel zu Urpsrung.
-	/*glBegin(GL_LINE_STRIP);
-	glVertex3f(0, 0, 0);
-	glVertex3f(cone_cent_dis * cos(cone_cent_angle), cone_cent_dis * sin(cone_cent_angle), 0);
+	float origModel[16];
+	float pos[4];
+	glGetFloatv(GL_MODELVIEW_MATRIX, origModel);
+
+	glLoadIdentity();
+	glRotatef(angle * speed, 0, 1, 0);
+	glTranslatef(10, 0, 0);
+	glRotatef(angle*speed, 0, 0, 1);
+	glTranslatef(8, 0, 0);
+
+	float model[16];
+
+	glGetFloatv(GL_MODELVIEW_MATRIX, model);
+
+	pos[0] = pos[0] * model[0] + pos[1] * model[4] + pos[2] * model[8] + pos[3] * model[12];
+	pos[1] = pos[0] * model[1] + pos[1] * model[5] + pos[2] * model[9] + pos[3] * model[13];
+	pos[2] = pos[0] * model[2] + pos[1] * model[6] + pos[2] * model[10] + pos[3] * model[14];
+	pos[3] = pos[0] * model[3] + pos[1] * model[7] + pos[2] * model[11] + pos[3] * model[15];
+
+	//recreate current matrix model
+	glLoadMatrixf(origModel);
+
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINES);
+	glVertex4f(0, 0, 0,1);
+	glColor4f(1.0f, 0.0f, 0.0f,1.0f);
+	glVertex4f(pos[0], pos[1], pos[2],pos[3]);
+	glColor4f(1.0f, 0.0f, 0.0f,1.0f);
 	glEnd();
-	*/
-	
+	glEnable(GL_LIGHTING);
 
-	/* MICHI
-	//Draw line 
-	GLfloat modelview[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
-	glVertex3f startLine = modelview * glVertex3f(0, 0, 0);
-	glTranslatef(3.f, 0.f, 0.f);
-	glVertex3f endLine = modelview * glVertex3f(0, 0, 0);
-	drawLine(start, end);
-	glTranslatef(3.f, 0.f, 0.f);
-	
-	
 	glPopMatrix();
-	glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
-	glPushMatrix();
-	//should be 0,0,0 anyway
-	glVertex3f coneUp = startLine;
-	startLine = modelview * glVertex3f(0, 0, 0);
-	drawLine(start, end);
-
-	
-	gluLookat(endLine.x, endLine.y, endLine.z, 0, 0, 0, endLine.x - coneUp.x, endLine.y - coneUp.y, endLine.z - coneUp.z);
-	glutSolidCone(1, 2, 25, 25);
-	
-	glPopMatrix();
-	*/
-
 	glutSwapBuffers();
 
 	angle += 1.0f / 60.0f;
-	speed += 1.0f / 60.0f;
+	//speed += 1.0f / 60.0f;
 }
 
 void mouseMotion(int x, int y)
