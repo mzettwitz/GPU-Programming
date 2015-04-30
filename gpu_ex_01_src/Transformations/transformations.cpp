@@ -1,4 +1,4 @@
-// *** Transformationen
+ï»¿// *** Transformationen
 
 #include <math.h>
 #include <GL/freeglut.h>
@@ -17,8 +17,9 @@ float distance = 25.0f;
 float oldX, oldY;
 int motionState;
 
-// Winkel, der sich kontinuierlich erhöht. (Kann für die Bewegungen auf den Kreisbahnen genutzt werden)
+// Winkel, der sich kontinuierlich erhÃ¶ht. (Kann fÃ¼r die Bewegungen auf den Kreisbahnen genutzt werden)
 float angle = 0.0f;
+float speed = 1.f;
 
 float toDeg(float angle) { return angle / PI * 180.0f; }
 float toRad(float angle) { return angle * PI / 180.0f; }
@@ -29,14 +30,21 @@ void drawCircle(float radius, int resolution)
 	// Abschalten der Beleuchtung.
 	glDisable(GL_LIGHTING);
 
-	// TODO: Zeichnen eines Kreises. 
-	// Nutzen Sie die Methoden glBegin, glEnd, glVertex3f und ggf. glColor3f um einen GL_LINE_STRIP zu rendern.
+	glBegin(GL_LINE_STRIP);
+	for (int i = 0; i <= resolution; ++i)
+	{
+		float alpha = float(i * (360.f / float(resolution)));
+		glVertex3f(radius *cos(toRad(alpha)), 0, radius *sin(toRad(alpha)));
+		glColor3f(1.f, 0.f, 0.f);
+	}
+	glEnd();
 
 	// Anschalten der Beleuchtung.
 	glEnable(GL_LIGHTING);
 }
 
-void display(void)	
+
+void display(void)
 {
 	// Buffer clearen
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -52,48 +60,110 @@ void display(void)
 	// Teekanne rendern.
 	glutSolidTeapot(1);
 
-	// TODO: Den Matrix-Stack sichern.	
-	
-		// TODO: Zeichnen der Kugelkreisbahn.			
-		// TODO: Zeichnen der Kugel.
-			// Wenden Sie eine Translation und eine Rotation an, bevor sie die Kugel zeichnen. Sie können die Variable 'angle' für die Rotation verwenden.
-			// Bedenken Sie dabei die richtige Reihenfolge der beiden Transformationen.
-		
-		// TODO: Zeichnen der Würfelkreisbahn.
-			// Hinweis: Der Ursprung des Koordinatensystems befindet sich nun im Zentrum des Würfels.
-			// Drehen Sie das Koordinatensystem um 90° entlang der Achse, die für die Verschiebung des Würfels genutzt wurde.
-			// Danach steht die Würfelkreisbahn senkrecht zur Tangentialrichtung der Kugelkreisbahn.		
-		// TODO: Zeichnen des Würfels.
-			// Wenden Sie die entsprechende Translation und Rotation an, bevor sie den Würfel zeichnen.
+	// Den Matrix-Stack sichern.	
+	glPushMatrix();
 
-		// TODO: Zeichnen einer Linie von Würfel zu Kegel.
-				
-		// TODO: Drehung anwenden, sodass Koordinatensystem in Richtung Ursprung orientiert ist. (Hinweis: Implementieren Sie dies zuletzt.)		
-		
-		// TODO: Zeichnen der Linie von Kegel zu Urpsrung.		
-		// TODO: Zeichnen des Kegels.
-		
-	// TODO: Den Matrix-Stack wiederherstellen.	
-	
-	glutSwapBuffers();	
+	// Zeichnen der Kugelkreisbahn.
+	drawCircle(10.f, 100);
+
+	// Zeichnen der Kugel.
+	// Wenden Sie eine Translation und eine Rotation an, bevor sie die Kugel zeichnen. Sie kï¿½nnen die Variable 'angle' fÃ¼r die Rotation verwenden.
+	// Bedenken Sie dabei die richtige Reihenfolge der beiden Transformationen.
+	glRotatef(angle * speed, 0, 1, 0);
+	glTranslatef(10.f, 0.f, 0.f);
+	glutSolidSphere(1, 25, 25);
+
+	// Zeichnen der WÃ¼rfelkreisbahn.
+	// Hinweis: Der Ursprung des Koordinatensystems befindet sich nun im Zentrum des WÃ¼rfels.
+	// Drehen Sie das Koordinatensystem um 90Â° entlang der Achse, die fÃ¼r die Verschiebung des WÃ¼rfels genutzt wurde.
+	// Danach steht die WÃ¼rfelkreisbahn senkrecht zur Tangentialrichtung der Kugelkreisbahn.
+	glRotatef(90.f, 1.f, 0.f, 0.f);
+	drawCircle(5.f, 100);
+
+	// Zeichnen des WÃ¼rfels.
+	// Wenden Sie die entsprechende Translation und Rotation an, bevor sie den WÃ¼rfel zeichnen.
+	glRotatef(angle*speed, 0, 1, 0);
+	glTranslatef(5.f, 0.f, 0.f);
+	glutSolidCube(1);
+
+	// Zeichnen einer Linie von WÃ¼rfel zu Kegel.
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINES);
+	glVertex3f(0.f, 0.f, 0.f);
+	glColor3f(1.f, 0.f, 0.f);
+	glVertex3f(3.f, 0.f, 0.f);
+	glColor3f(1.f, 0.f, 0.f);
+	glEnd();
+	glEnable(GL_LIGHTING);
+
+
+	// Drehung anwenden, sodass Koordinatensystem in Richtung Ursprung orientiert ist. (Hinweis: Implementieren Sie dies zuletzt.)
+	glTranslatef(3.f, 0.f, 0.f);
+	glRotatef(90 + angle*speed, 0, -1, 0);	//Rotation countering the cube-rotation -> always looking towards the teapot
+
+	// Tangens to look at the oirigin from upside and downside
+	GLfloat length = 10 + 8 * cosf(angle*speed*PI / 180);
+	GLfloat height = 8 * sinf(angle*speed*PI / 180);
+	GLfloat heightangle = 180 / PI*atan(height / length);
+	glRotatef(heightangle, 0, 1, 0);
+
+	// Zeichnen des Kegels.
+	glutSolidCone(0.5, 1, 25, 25);
+
+
+	// TODO: Zeichnen der Linie von Kegel zu Urpsrung.
+	float origModel[16];
+	float pos[4];
+	glGetFloatv(GL_MODELVIEW_MATRIX, origModel);
+
+	glLoadIdentity();
+	glRotatef(angle * speed, 0, 1, 0);
+	glTranslatef(10, 0, 0);
+	glRotatef(angle*speed, 0, 0, 1);
+	glTranslatef(8, 0, 0);
+
+	float model[16];
+
+	glGetFloatv(GL_MODELVIEW_MATRIX, model);
+
+	pos[0] = pos[0] * model[0] + pos[1] * model[4] + pos[2] * model[8] + pos[3] * model[12];
+	pos[1] = pos[0] * model[1] + pos[1] * model[5] + pos[2] * model[9] + pos[3] * model[13];
+	pos[2] = pos[0] * model[2] + pos[1] * model[6] + pos[2] * model[10] + pos[3] * model[14];
+	pos[3] = pos[0] * model[3] + pos[1] * model[7] + pos[2] * model[11] + pos[3] * model[15];
+
+	//recreate current matrix model
+	glLoadMatrixf(origModel);
+
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINES);
+	glVertex4f(0, 0, 0,1);
+	glColor4f(1.0f, 0.0f, 0.0f,1.0f);
+	glVertex4f(pos[0], pos[1], pos[2],pos[3]);
+	glColor4f(1.0f, 0.0f, 0.0f,1.0f);
+	glEnd();
+	glEnable(GL_LIGHTING);
+
+	glPopMatrix();
+	glutSwapBuffers();
 
 	angle += 1.0f / 60.0f;
+	//speed += 1.0f / 60.0f;
 }
 
 void mouseMotion(int x, int y)
 {
 	float deltaX = x - oldX;
 	float deltaY = y - oldY;
-	
+
 	if (motionState == ROTATE) {
 		theta -= 0.01f * deltaY;
 
 		if (theta < 0.01f) theta = 0.01f;
-		else if (theta > PI/2.0f - 0.01f) theta = PI/2.0f - 0.01f;
+		else if (theta > PI / 2.0f - 0.01f) theta = PI / 2.0f - 0.01f;
 
-		phi += 0.01f * deltaX;	
-		if (phi < 0) phi += 2*PI;
-		else if (phi > 2*PI) phi -= 2*PI;
+		phi += 0.01f * deltaX;
+		if (phi < 0) phi += 2 * PI;
+		else if (phi > 2 * PI) phi -= 2 * PI;
 	}
 	else if (motionState == MOVE) {
 		distance += 0.01f * deltaY;
@@ -143,14 +213,14 @@ int main(int argc, char **argv)
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
-	
+
 	glEnable(GL_DEPTH_TEST);
 
-	glViewport(0,0,width,height);					
-	glMatrixMode(GL_PROJECTION);					
-	glLoadIdentity();								
+	glViewport(0, 0, width, height);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
 
-	gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
+	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
