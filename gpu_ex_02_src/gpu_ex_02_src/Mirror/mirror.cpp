@@ -34,6 +34,16 @@ void drawScene()
 	glPopMatrix();
 }
 
+void drawScene2()
+{
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, teapotColor);
+	glPushMatrix();
+	glTranslatef(0, -0.37f, 0);
+	glRotatef(180, 1, 0, 0);
+	glutSolidTeapot(0.5f);
+	glPopMatrix();
+}
+
 // Spiegel zeichen: Ein Viereck
 void drawMirror()
 {
@@ -47,7 +57,7 @@ void drawMirror()
 
 void display(void)	
 {
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f); //set background color to white
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glLoadIdentity();
@@ -58,13 +68,26 @@ void display(void)
 	gluLookAt(x, y, z, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
 	// Szene normal zeichnen (ohne Spiegelobjekt)
-
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 	drawScene();
 
+	
+
 	// *** Spiegel zeichnen, so dass Spiegelobjekt im Stencil Buffer eingetragen wird
 	// *** Framebuffer dabei auf Read-Only setzen, Depth Buffer deaktivieren, Stencil Test aktivieren
-
+	
+	glEnable(GL_STENCIL_TEST);
+	glDisable(GL_DEPTH_TEST);
+	
+	//Maske erstellen
+	glColorMask(0,0,0,0);                                //alle Farbkomponenten deaktiviert -> es wird nichts gezeichnet
+	glStencilFunc(GL_ALWAYS, 1, 1);                      //test immer erfolgreich
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);           //wenn Test bestanden, mit  Masken/Referenz-Wert ersetzt werden
+	drawMirror();
+	glColorMask(1,1,1,1);                               // alle Farbkomponenten aktiviert -> wird wieder gezeichnet
+	
+	
+	
 
 	// *** Gespiegelte Szene zeichnen, Stencil Buffer so einstellen, dass nur bei
 	// *** einem Eintrag 1 im Stencil Buffer das entsprechende Pixel im Framebuffer 
@@ -72,11 +95,27 @@ void display(void)
 	// *** Depth Buffer wieder anmachen, Framebuffer Maskierung deaktivieren
 	// *** Was macht man mit der Lichtquelle ?
 
+	glEnable(GL_DEPTH_TEST);
+	glStencilFunc(GL_EQUAL,1,1);                         //nur dort gezeichnet, wo im Stencil Buffer 1 steht
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);				 //Inhalt im Stencil Buffer nicht mehr verändert
+	
+
+	//Gespiegelte Szene 
+	glPushMatrix();
+	glScalef(1.f, -1.f, 1.f);	
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPos); 
+	drawScene();                                 
+	glPopMatrix();
+
 
 	// *** Stencil Test deaktivieren, Spiegelung der Szene rueckgaengig machen
 	// *** Spiegelobjekt mit diffuser Farbe mirrorColor zeichen
 	// *** Blending aktivieren und ueber Alpha-Kanal mit Spiegelbild zusammenrechnen
 
+	glDisable(GL_STENCIL_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mirrorColor);
 	drawMirror();
 	glDisable(GL_BLEND);
 

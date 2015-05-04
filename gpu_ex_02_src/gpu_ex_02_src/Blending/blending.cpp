@@ -18,7 +18,7 @@ void drawQuad(float x, float y, float z,float r, float g, float b,float a)
 
 void display(void)
 {
-	if (button != 3)
+	if (button != 2)
 	{
 		glClearColor(0, 0, 0, 1);
 	}
@@ -36,19 +36,19 @@ void display(void)
 	glEnable(GL_BLEND);
 	switch (button)
 	{
-		case 1:
+		case 0:
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			drawQuad(1.f, 1.f, -2.f, 1.f, 0.f, 0.f, 0.7f);
 			drawQuad(0.25f, 0.75f, -1.f, 0.f, 1.f, 0.f, 0.7f);
 			drawQuad(0.5f, 0.25f, 0.f, 0.f, 0.f, 1.f, 0.7f);
 			break;
-		case 2:
+		case 1:
 			glBlendFunc(GL_ONE, GL_ONE);
 			drawQuad(1.f, 1.f, -2.f, 1.f, 0.f, 0.f, 1.f);
 			drawQuad(0.25f, 0.75f, -1.f, 0.f, 1.f, 0.f, 1.f);
 			drawQuad(0.5f, 0.25f, 0.f, 0.f, 0.f, 1.f, 1.f);
 			break;
-		case 3:
+		case 2:
 			glBlendFunc(GL_DST_COLOR,GL_ZERO);
 			drawQuad(1.f,1.f,-2.f,1.f,1.f,0.f,1.f);
 			drawQuad(0.25f,0.75f,-1.f,0.f,1.f,1.f,1.f);
