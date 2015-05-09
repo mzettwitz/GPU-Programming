@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <assert.h>
 
 using namespace std;
 
@@ -24,7 +25,8 @@ int width = 512;
 int height = 512;
 
 // uniform locations
-GLint uniformTime;
+float uniformTime = 0.f;
+GLint loc;
 
 bool usePumping = true;
 
@@ -116,41 +118,57 @@ void initGL()
 
 void initGLSL()
 {
-	// TODO: Create empty shader object (vertex shader) and assign it to 'vertexShaderPumping'
+	///////VERTEX SHADER
+	// DONE: Create empty shader object (vertex shader) and assign it to 'vertexShaderPumping'
+	GLuint vertexShaderPumping = glCreateShader(GL_VERTEX_SHADER);
 	
 	// Read vertex shader source 
 	string shaderSource = readFile("pumping.vert");
 	const char* sourcePtr = shaderSource.c_str();
 
-	// TODO: Attach shader code
+	// DONE: Attach shader code
+	glShaderSource(vertexShaderPumping, 1, &sourcePtr, NULL);
 	
-	// TODO: Compile shader	
+	// DONE: Compile shader	
+	glCompileShader(vertexShaderPumping);
 	
 	printShaderInfoLog(vertexShaderPumping);
 
-	// TODO: Create empty shader object (fragment shader) and assign it to 'fragmentShaderPumping'
+	///////FRAGMENT SHADER
+	// DONE: Create empty shader object (fragment shader) and assign it to 'fragmentShaderPumping'
+	GLuint fragmentShaderPumping = glCreateShader(GL_FRAGMENT_SHADER);
 
 	// Read vertex shader source 
 	shaderSource = readFile("pumping.frag");
 	sourcePtr = shaderSource.c_str();
 
-	// TODO: Attach shader code
+	// DONE: Attach shader code
+	glShaderSource(fragmentShaderPumping, 1, &sourcePtr, NULL);
 
-	// TODO: Compile shader
+	// DONE: Compile shader
+	glCompileShader(fragmentShaderPumping);
 
 	printShaderInfoLog(fragmentShaderPumping);
 
-	// TODO: Create shader program and assign it to 'shaderProgramPumping'
+	///////SHADER PROGRAMM
+	// DONE: Create shader program and assign it to 'shaderProgramPumping'
+	GLuint shaderProgramPumping = glCreateProgram();
 
-	// TODO: Attach shader vertex shader and fragment shader to program	
+	// DONE: Attach shader vertex shader and fragment shader to program	
+	glAttachShader(shaderProgramPumping, vertexShaderPumping);
+	glAttachShader(shaderProgramPumping, fragmentShaderPumping);
 
-	// TODO: Link program
-	
+	// DONE: Link program
+	glLinkProgram(shaderProgramPumping);
+
 	printProgramInfoLog(shaderProgramPumping);
 
-	// TODO: Use program.	
+	// DONE: Use program.	
+	glUseProgram(shaderProgramPumping);
 
 	// TODO: Teilaufgabe 3... Die Uniform Location der Zeit-Variable bestimmen.	
+	loc = glGetUniformLocation(shaderProgramPumping, "time");
+	assert(loc != -1);
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -169,7 +187,9 @@ void display()
 	// Pumping Shader anschalten falls aktiviert
 	if (usePumping) {
 		glUseProgram( shaderProgramPumping );
-		// TODO: Den Zeitparameter (uniform) aktualisieren.
+		// TODO: Den Zeitparameter (uniform) aktualisieren
+		glUniform1f(loc, uniformTime);
+		
 	}
 	else {
 		glUseProgram( 0 );
@@ -185,9 +205,10 @@ void display()
 	glutSolidTeapot(3);
 
 	// Increment rotation angle
-	alpha += 1;
+	alpha += 0;
 
-	// TODO: Inkrementieren des Zeit Parameters.
+	// DONE: Inkrementieren des Zeit Parameters.
+	uniformTime += 5;
 
 	// Swap display buffers
 	glutSwapBuffers();

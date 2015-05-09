@@ -1,4 +1,5 @@
-// TODO: Uniform-Parameter einfügen.
+// DONE: Uniform-Parameter einfügen.
+uniform float time;
 
 void main() {
 
@@ -7,6 +8,7 @@ void main() {
 	normal = normalize(normal);
 
 	// TODO: Pumping-Teapot Formel einfügen.
+	gl_Position = gl_Position + 0.25f * abs(sin(0.125f * time)) * normal;
 
 	vec4 outColor = gl_FrontMaterial.emission
 				+ gl_FrontMaterial.ambient * gl_LightModel.ambient
