@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Mirror", "Mirror\Mirror.vcxproj", "{4383783A-CAA5-4D9A-94D3-CF3F875218DD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Blending", "Blending\Blending.vcxproj", "{F3C7B864-95A5-4A2F-AF97-6CD8FFF4FEE9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VBO_fractal", "VBO_fractal\VBO_fractal.vcxproj", "{9203B921-440F-4E1B-98DF-3292F4D3E19C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4383783A-CAA5-4D9A-94D3-CF3F875218DD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4383783A-CAA5-4D9A-94D3-CF3F875218DD}.Debug|Win32.Build.0 = Debug|Win32
+		{4383783A-CAA5-4D9A-94D3-CF3F875218DD}.Release|Win32.ActiveCfg = Release|Win32
+		{4383783A-CAA5-4D9A-94D3-CF3F875218DD}.Release|Win32.Build.0 = Release|Win32
+		{F3C7B864-95A5-4A2F-AF97-6CD8FFF4FEE9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F3C7B864-95A5-4A2F-AF97-6CD8FFF4FEE9}.Debug|Win32.Build.0 = Debug|Win32
+		{F3C7B864-95A5-4A2F-AF97-6CD8FFF4FEE9}.Release|Win32.ActiveCfg = Release|Win32
+		{F3C7B864-95A5-4A2F-AF97-6CD8FFF4FEE9}.Release|Win32.Build.0 = Release|Win32
+		{9203B921-440F-4E1B-98DF-3292F4D3E19C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9203B921-440F-4E1B-98DF-3292F4D3E19C}.Debug|Win32.Build.0 = Debug|Win32
+		{9203B921-440F-4E1B-98DF-3292F4D3E19C}.Release|Win32.ActiveCfg = Release|Win32
+		{9203B921-440F-4E1B-98DF-3292F4D3E19C}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
