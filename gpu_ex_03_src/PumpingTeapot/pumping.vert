@@ -6,9 +6,12 @@ void main() {
 	gl_Position = gl_ModelViewMatrix * gl_Vertex;
 	vec3 normal = gl_NormalMatrix * gl_Normal;
 	normal = normalize(normal);
+	vec4 normal4d = {normal[0], normal[1], normal[2], 1};
 
-	// TODO: Pumping-Teapot Formel einfügen.
-	gl_Position = gl_Position + 0.25f * abs(sin(0.125f * time)) * normal;
+	// DONE: Pumping-Teapot Formel einfügen.
+	// feel free to change the factor 0.25f to have some fun. 
+	// 1.f HULKPOT!!!
+	gl_Position = gl_Position + 1.f * abs(sin(0.125f * time)) * normal4d;
 
 	vec4 outColor = gl_FrontMaterial.emission
 				+ gl_FrontMaterial.ambient * gl_LightModel.ambient

@@ -37,3 +37,4 @@
 gpu_ex_03_src/GlowingTeapot/GlowingTeapot.vcxproj
 gpu_ex_03_src/PumpingTeapot/PumpingTeapot.vcxproj
 gpu_ex_03_src/SSAA/SSAA.vcxproj
+*.opensdf

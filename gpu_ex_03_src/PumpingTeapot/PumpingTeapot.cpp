@@ -105,7 +105,8 @@ void initGL()
    glEnable(GL_LIGHT0);
 
    // Initialize material
-   GLfloat teapot_diffuse[]  = {0.75f, 0.375f, 0.075f, 1};
+   //GLfloat teapot_diffuse[]  = {0.75f, 0.375f, 0.075f, 1};
+   GLfloat teapot_diffuse[] = { 0.08f, 0.5f, 0.075f, 1 };    //HULKMODE
    GLfloat teapot_specular[] = {0.8f, 0.8f, 0.8f, 1};
 
    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, teapot_diffuse);
@@ -120,7 +121,7 @@ void initGLSL()
 {
 	///////VERTEX SHADER
 	// DONE: Create empty shader object (vertex shader) and assign it to 'vertexShaderPumping'
-	GLuint vertexShaderPumping = glCreateShader(GL_VERTEX_SHADER);
+	vertexShaderPumping = glCreateShader(GL_VERTEX_SHADER);
 	
 	// Read vertex shader source 
 	string shaderSource = readFile("pumping.vert");
@@ -136,7 +137,7 @@ void initGLSL()
 
 	///////FRAGMENT SHADER
 	// DONE: Create empty shader object (fragment shader) and assign it to 'fragmentShaderPumping'
-	GLuint fragmentShaderPumping = glCreateShader(GL_FRAGMENT_SHADER);
+	fragmentShaderPumping = glCreateShader(GL_FRAGMENT_SHADER);
 
 	// Read vertex shader source 
 	shaderSource = readFile("pumping.frag");
@@ -152,7 +153,7 @@ void initGLSL()
 
 	///////SHADER PROGRAMM
 	// DONE: Create shader program and assign it to 'shaderProgramPumping'
-	GLuint shaderProgramPumping = glCreateProgram();
+	shaderProgramPumping = glCreateProgram();
 
 	// DONE: Attach shader vertex shader and fragment shader to program	
 	glAttachShader(shaderProgramPumping, vertexShaderPumping);
@@ -166,7 +167,7 @@ void initGLSL()
 	// DONE: Use program.	
 	glUseProgram(shaderProgramPumping);
 
-	// TODO: Teilaufgabe 3... Die Uniform Location der Zeit-Variable bestimmen.	
+	// DONE: Teilaufgabe 3... Die Uniform Location der Zeit-Variable bestimmen.	
 	loc = glGetUniformLocation(shaderProgramPumping, "time");
 	assert(loc != -1);
 }
@@ -187,7 +188,7 @@ void display()
 	// Pumping Shader anschalten falls aktiviert
 	if (usePumping) {
 		glUseProgram( shaderProgramPumping );
-		// TODO: Den Zeitparameter (uniform) aktualisieren
+		// DONE: Den Zeitparameter (uniform) aktualisieren
 		glUniform1f(loc, uniformTime);
 		
 	}
@@ -196,6 +197,7 @@ void display()
 	}
 
 	// Clear window
+	glClearColor(1, 1, 1, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glLoadIdentity();
@@ -205,10 +207,12 @@ void display()
 	glutSolidTeapot(3);
 
 	// Increment rotation angle
-	alpha += 0;
+	alpha += 1;
 
 	// DONE: Inkrementieren des Zeit Parameters.
-	uniformTime += 5;
+	//normal: 0.1f
+	//HULKMODE: 0.25f 
+	uniformTime += 0.25f;
 
 	// Swap display buffers
 	glutSwapBuffers();
