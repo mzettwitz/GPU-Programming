@@ -17,9 +17,9 @@ GLfloat alpha = 0;
 // Blur Shader Program
 GLuint vertexShaderBlur = -1;
 GLuint fragmentShaderBlur_hor = -1;
-GLuint fragmentShaderBlur_ver = -1;
+GLuint fragmentShaderBlur_vert = -1;
 GLuint shaderProgramBlur_hor = -1;   //selbst angelegt
-GLuint shaderProgramBlur_ver = -1;
+GLuint shaderProgramBlur_vert = -1;
 
 
 // Texture Ids and Framebuffer Object Ids
@@ -165,19 +165,19 @@ void initGLSL()
 
 
 	//vertikaler Shader
-	fragmentShaderBlur_ver = glCreateShader(GL_FRAGMENT_SHADER);
-	shaderSource = readFile("blur_verT.frag");
+	fragmentShaderBlur_vert = glCreateShader(GL_FRAGMENT_SHADER);
+	shaderSource = readFile("blur_vert.frag");
 	sourcePtr = shaderSource.c_str();
-	glShaderSource(fragmentShaderBlur_ver, 1, &sourcePtr, NULL);
-	glCompileShader(fragmentShaderBlur_ver);
-	printShaderInfoLog(fragmentShaderBlur_ver);
+	glShaderSource(fragmentShaderBlur_vert, 1, &sourcePtr, NULL);
+	glCompileShader(fragmentShaderBlur_vert);
+	printShaderInfoLog(fragmentShaderBlur_vert);
 
 	//vertikes Shader Programm
-	shaderProgramBlur_ver = glCreateProgram();
-	glAttachShader(shaderProgramBlur_ver, fragmentShaderBlur_ver);
-	glAttachShader(shaderProgramBlur_ver, vertexShaderBlur);
-	glLinkProgram(shaderProgramBlur_ver);
-	printProgramInfoLog(shaderProgramBlur_ver);
+	shaderProgramBlur_vert = glCreateProgram();
+	glAttachShader(shaderProgramBlur_vert, fragmentShaderBlur_vert);
+	glAttachShader(shaderProgramBlur_vert, vertexShaderBlur);
+	glLinkProgram(shaderProgramBlur_vert);
+	printProgramInfoLog(shaderProgramBlur_vert);
 
 
 	//horizontal
@@ -187,7 +187,7 @@ void initGLSL()
 		cout << "ERROR: No such uniform teapot" << endl;
 
 	//vertikal
-	teapotTextureLocation = glGetUniformLocation(shaderProgramBlur_ver, "texture");
+	teapotTextureLocation = glGetUniformLocation(shaderProgramBlur_vert, "texture");
 	glUniform1i(teapotTextureLocation, 1);
 	if (teapotTextureLocation == -1)
 		cout << "ERROR: No such uniform teapot" << endl;
@@ -343,7 +343,7 @@ void display()
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0); // deaktivieren von FBO
 
-		glUseProgram(shaderProgramBlur_ver); //nun vertikalen Shader aufrufen
+		glUseProgram(shaderProgramBlur_vert); //nun vertikalen Shader aufrufen
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //bildschirmfüllendes Rechteck zeichnen
 		drawScreenFillingQuad();

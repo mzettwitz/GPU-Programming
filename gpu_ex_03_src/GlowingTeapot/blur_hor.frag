@@ -31,8 +31,8 @@ void main()
 	}
 
 	// Durch filterWidth teilen, um zu normieren.
-	//val = 2.0 * val / float(filterWidth);  
-	val = 2.0 * val / float(filterWidth*filterWidth);  
+	
+	val = 2.0 * val / float(filterWidth);  
 
 	// TODO: Ausgabe von val
 	gl_FragColor.rgb = val.xyz;

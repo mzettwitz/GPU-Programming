@@ -22,8 +22,8 @@ void main()
 
 	}
 
-	//val = 2.0 * val / float(filterWidth);
-	val = 2.0 * val / float(filterWidth*filterWidth);    
+	
+	val = 2.0 * val / float(filterWidth);    
 
 	gl_FragColor.rgb = val.xyz;
 
