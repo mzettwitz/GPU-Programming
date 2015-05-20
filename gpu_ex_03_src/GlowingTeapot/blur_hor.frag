@@ -1,39 +1,45 @@
 uniform sampler2D texture;
 
-// Filtergroesse (gesamt)
-uniform int filterWidth;
-
-// Hier soll der Filter implementiert werden
-void main()
+void main() 
 {
-        // Schrittweite fuer ein Pixel (bei Aufloesung 512)
-        float texCoordDelta = 1. / 512.;
+	// Hier soll der Filter implementiert werden
+	
+	// Schrittweite fuer ein Pixel (bei Aufloesung 512)
+	float texCoordDelta = 1. / 512.;
+	
+	// Filtergroesse (gesamt)
+	int filterWidth = 55;	
+	
+	// linker Ecke von Filter
+	vec2 texCoord;
+	texCoord.x = gl_TexCoord[0].s - (float(filterWidth / 2) * texCoordDelta);
+    texCoord.y = gl_TexCoord[0].t;
 
-        // linke Ecke des Filters
-        vec2 texCoord;
-        texCoord.x = gl_TexCoord[0].s - (float(filterWidth / 2) * texCoordDelta);
-        texCoord.y = gl_TexCoord[0].t;
+	// Wert zum Aufakkumulieren der Farbwerte
+	vec3 val = vec3(0); 
 
-        // Wert zum Aufakkumulieren der Farbwerte
-        vec3 val = vec3(0);
+	
+     for(int i=0; i< filterWidth; i++) 
+	{
+		
+        	val= val + texture2D(texture, texCoord).xyz;
 
-        vec2 texelDelta = vec2(0);
+			//TODO: Verschieben der Texturkoordinate -> naechstes Pixel in x Richtung	
+			texCoord.x= texCoord.x + texCoordDelta;
+		
 
-        for(int dx = 0; dx < filterWidth; dx++)
-        {
-                texelDelta.x = float(dx);
-                val = val + texture2D(texture, texCoord + texelDelta*texCoordDelta).rgb;
-        }
+	}
 
-        // Durch filterWidth teilen, um zu normieren.
-        val = 2.0 * val / float(filterWidth);
+	// Durch filterWidth teilen, um zu normieren.
+	val = 2.0 * val / float(filterWidth);  
+	 
 
-        // TODO: Ausgabe von val
-        gl_FragColor.rgb = val;
-        gl_FragColor.a = 1.0f;
+	// TODO: Ausgabe von val
+	gl_FragColor.rgb = val.xyz;
+        
 
-        // Die folgende Zeile dient nur zu Debugzwecken!
-        // Wenn das Framebuffer object richtig eingestellt wurde und die Textur an diesen Shader übergeben wurde
-        // wird die Textur duch den folgenden Befehl einfach nur angezeigt.
-        //gl_FragColor.rgb = texture2D(texture,gl_TexCoord[0].st).xyz;
+	// Die folgende Zeile dient nur zu Debugzwecken!
+	// Wenn das Framebuffer object richtig eingestellt wurde und die Textur an diesen Shader übergeben wurde
+	// wird die Textur duch den folgenden Befehl einfach nur angezeigt.
+	//gl_FragColor.rgb = texture2D(texture,gl_TexCoord[0].st).xyz;
 }
