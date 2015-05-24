@@ -117,7 +117,10 @@ void calcViewerCamera(float theta, float phi, float r)
 				viewPosition[0] + viewDirection[0], viewPosition[1] + viewDirection[1], viewPosition[2] + viewDirection[2], 
 				0, 1, 0);
 
-	// TODO: Updaten der View-Matrix. Die View-Matrix beginnt ab dem 17ten float des UBOs.
+	// DONE: Updaten der View-Matrix. Die View-Matrix beginnt ab dem 17ten float des UBOs.
+	GLfloat viewMat[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, viewMat);
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(viewMat), sizeof(viewMat), viewMat);
 }
 
 void mouseMotion(int x, int y)
@@ -174,12 +177,14 @@ void display(void)
 	// clear frame.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// TODO: Den Block-Index des Uniform-Blocks suchen, das im Shader 'progSimple' den Namen "GlobalMatrices" trägt.
+	// DONE: Den Block-Index des Uniform-Blocks suchen, das im Shader 'progSimple' den Namen "GlobalMatrices" trägt.
+	GLuint uboIndex = glGetUniformBlockIndex(progSimple, "GlobalMatrices");
 	
-	// TODO: Binden Sie diesen Blockindex an den Binding Point 0.
+	// DONE: Binden Sie diesen Blockindex an den Binding Point 0.
+	glUniformBlockBinding(progSimple, uboIndex, 0);
 	
-	// TODO: Binden Sie das gesamte UBO an den Binding Point 0. Offset = 0 und Size = Größe der Daten im UBO.
-	
+	// DONE: Binden Sie das gesamte UBO an den Binding Point 0. Offset = 0 und Size = Größe der Daten im UBO.
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, 0, 0, sizeof(float) * 32);
 
 	// Bind VAO and IBO
 	glBindVertexArray(vaoBunny);
@@ -256,20 +261,26 @@ void initGL()
 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, Bunny_specular);
 	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 45.2776f);
 
-	// TODO: Uniform Buffer Object für die Camera Matrizen anlegen.
+	// DONE: Uniform Buffer Object für die Camera Matrizen anlegen.
+	glGenBuffers(1, &uboCamera);
 	
-	// TODO: Das UBO binden (target = GL_UNIFORM_BUFFER)
+	// DONE: Das UBO binden (target = GL_UNIFORM_BUFFER)
+	glBindBuffer(GL_UNIFORM_BUFFER, uboCamera);
 		
-	// TODO: Speicherplatz allokieren mit glBufferData. Reservieren Sie Platz für 2 4x4 Matrizen mit float-Einträgen. Data = NULL und Usage = GL_STREAM_DRAW
+	// DONE: Speicherplatz allokieren mit glBufferData. Reservieren Sie Platz für 2 4x4 Matrizen mit float-Einträgen. Data = NULL und Usage = GL_STREAM_DRAW
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(float) * 32, NULL, GL_STREAM_DRAW);
 
 	// Initialize camera
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(45, 1, 0.1, 100);
 	
-	// TODO: query projection matrix and update the vbo.
+	// DONE: query projection matrix and update the ubo.
 		// Getten Sie sich die Projektionsmatrix und kopieren Sie sie auf die ersten 16 float Werte des UBOs. Beachten Sie, das das UBO dazu gebunden sein muss!
 		// Verwenden Sie dazu die Befehle glGetFloatv und glBufferSubData
+	GLfloat projMat[16];
+	glGetFloatv(GL_PROJECTION_MATRIX, projMat);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(projMat), projMat);
 	
 	// Viewmatrix initialisieren
 	glMatrixMode(GL_MODELVIEW);
@@ -281,11 +292,12 @@ void initGL()
 
 void initGLSL()
 {
+	////////////HAIR SHADERS
 	// Create empty shader object (vertex shader)
 	GLuint vertexShaderHair = glCreateShader(GL_VERTEX_SHADER);
 
 	// Read vertex shader source 
-	cout << "Loading: hari.vert" << endl;
+	cout << "Loading: hair.vert" << endl;
 	string shaderSource = readFile("hair.vert");
 	const char* sourcePtr = shaderSource.c_str();
 
@@ -300,8 +312,8 @@ void initGLSL()
 	// Create empty shader object (fragment shader)
 	GLuint fragmentShaderHair = glCreateShader(GL_FRAGMENT_SHADER);
 
-	// Read vertex shader source 
-	cout << "Loading: hari.frag" << endl;
+	// Read fragment shader source 
+	cout << "Loading: hair.frag" << endl;
 	shaderSource = readFile("hair.frag");
 	sourcePtr = shaderSource.c_str();
 
@@ -316,8 +328,8 @@ void initGLSL()
 	// Create empty shader object (geometry shader)
 	GLuint geometryShaderHair = glCreateShader(GL_GEOMETRY_SHADER);
 
-	// Read vertex shader source 
-	cout << "Loading: hari.geom" << endl;
+	// Read geometry shader source 
+	cout << "Loading: hair.geom" << endl;
 	shaderSource = readFile("hair.geom");
 	sourcePtr = shaderSource.c_str();
 
@@ -341,6 +353,8 @@ void initGLSL()
 	glLinkProgram(progHair);
 	printProgramInfoLog(progHair);
 
+
+	////////////BUNNY SHADERS
 	// Create empty shader object (vertex shader)
 	GLuint vertexShaderSimple = glCreateShader(GL_VERTEX_SHADER);
 
@@ -360,7 +374,7 @@ void initGLSL()
 	// Create empty shader object (fragment shader)
 	GLuint fragmentShaderSimple = glCreateShader(GL_FRAGMENT_SHADER);
 
-	// Read vertex shader source 
+	// Read fragment shader source 
 	cout << "Loading: simple.frag" << endl;
 	shaderSource = readFile("simple.frag");
 	sourcePtr = shaderSource.c_str();
@@ -371,7 +385,8 @@ void initGLSL()
 	// Compile
 	glCompileShader(fragmentShaderSimple);
 	printShaderInfoLog(fragmentShaderSimple);
-
+	
+	
 	// Create shader program
 	progSimple = glCreateProgram();	
 
@@ -387,7 +402,7 @@ void initGLSL()
 
 //------------------------------------------------------------------------
 //   It's the main application function. Note the clean code you can
-//   obtain using he GLUT library. No calls to dark windows API
+//   obtain using the GLUT library. No calls to dark windows API
 //   functions with many obscure parameters list. =)
 //------------------------------------------------------------------------
 int main(int argc, char** argv)
