@@ -178,13 +178,13 @@ void display(void)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// DONE: Den Block-Index des Uniform-Blocks suchen, das im Shader 'progSimple' den Namen "GlobalMatrices" trägt.
-	GLuint uboIndex = glGetUniformBlockIndex(progSimple, "GlobalMatrices");
+	GLuint uboIndex = glGetUniformBlockIndex(progHair, "GlobalMatrices");
 	
 	// DONE: Binden Sie diesen Blockindex an den Binding Point 0.
-	glUniformBlockBinding(progSimple, uboIndex, 0);
+	glUniformBlockBinding(progHair, uboIndex, 0);
 	
 	// DONE: Binden Sie das gesamte UBO an den Binding Point 0. Offset = 0 und Size = Größe der Daten im UBO.
-	glBindBufferRange(GL_UNIFORM_BUFFER, 0, 0, 0, sizeof(float) * 32);
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, 0, 0, sizeof(GLfloat) * 32);
 
 	// Bind VAO and IBO
 	glBindVertexArray(vaoBunny);
@@ -268,7 +268,7 @@ void initGL()
 	glBindBuffer(GL_UNIFORM_BUFFER, uboCamera);
 		
 	// DONE: Speicherplatz allokieren mit glBufferData. Reservieren Sie Platz für 2 4x4 Matrizen mit float-Einträgen. Data = NULL und Usage = GL_STREAM_DRAW
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(float) * 32, NULL, GL_STREAM_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(GLfloat) * 32, NULL, GL_STREAM_DRAW);
 
 	// Initialize camera
 	glMatrixMode(GL_PROJECTION);
