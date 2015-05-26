@@ -2,10 +2,18 @@
 
 #version 150
 
-#define OUT_VERTS 6
+#define OUT_VERTS 12
+
+
+
 
 layout(triangles) in;
-layout(triangle_strip, max_vertices = OUT_VERTS) out;
+
+//added
+in vec3 normal[];
+
+//changed to line strip
+layout(line_strip, max_vertices = OUT_VERTS) out;
 
 layout(std140) uniform GlobalMatrices
 {
@@ -15,24 +23,32 @@ layout(std140) uniform GlobalMatrices
 
 void main(void)
 {
-	//translate the bunny
+	
+	
 	gl_Position = vec4(0);
-	vec4 add = vec4(0.5f, 0.0f, -0.5f, 0.f);
 	for(int i=0; i< gl_in.length(); i++){
-		gl_Position = gl_in[i].gl_Position + add;
-		gl_Position = Projection * View * gl_Position;
 		
+		//draw lines
+		vec3 Point = gl_in[i].gl_Position.xyz;
+		vec3 Normal = normalize(normal[i].xyz);
+		gl_Position = Projection * View * vec4(Point,1);
 		EmitVertex();
-	}
-	EndPrimitive();
 
-	//clone a second bunny
-	for(int i=0; i< gl_in.length(); i++){
-		gl_Position = gl_in[i].gl_Position - add;
-		gl_Position = Projection * View * gl_Position;
+        vec4 l = vec4(Point,1);
+		l = l + 0.01 * vec4(Normal,0);       //used some random number -> result looks acceptable
+		gl_Position = Projection * View * l; 
 		EmitVertex();
+
+		//gravity
+		for(int j = 1; j < OUT_VERTS; j++)
+		{
+			vec4 diff = 0.01 *vec4(Normal,0) - 0.003 *j*vec4(0,1,0,0); 
+			diff = 0.01*normalize(diff);
+			l = l + diff;
+			gl_Position = Projection * View * l;
+		    EmitVertex();
+		}
+		
+		EndPrimitive();
 	}
-	EndPrimitive();
-
-
 }
