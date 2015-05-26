@@ -120,6 +120,7 @@ void calcViewerCamera(float theta, float phi, float r)
 	// DONE: Updaten der View-Matrix. Die View-Matrix beginnt ab dem 17ten float des UBOs.
 	GLfloat viewMat[16];
 	glGetFloatv(GL_MODELVIEW_MATRIX, viewMat);
+	//glBufferSubData(GL_UNIFORM_BUFFER, startIndex(inBytes), sizeInBytes, dataPointer);
 	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(viewMat), sizeof(viewMat), viewMat);
 }
 
@@ -178,13 +179,16 @@ void display(void)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// DONE: Den Block-Index des Uniform-Blocks suchen, das im Shader 'progSimple' den Namen "GlobalMatrices" trägt.
+	//Gluint glGetUniformBlockIndex(Gluint program, const char* uniformBlockName)
 	GLuint uboIndex = glGetUniformBlockIndex(progHair, "GlobalMatrices");
 	
 	// DONE: Binden Sie diesen Blockindex an den Binding Point 0.
+	//glUniformBlockBinding(myShaderProgram, uboIndex, bindingPoint)
 	glUniformBlockBinding(progHair, uboIndex, 0);
 	
 	// DONE: Binden Sie das gesamte UBO an den Binding Point 0. Offset = 0 und Size = Größe der Daten im UBO.
-	glBindBufferRange(GL_UNIFORM_BUFFER, 0, 0, 0, sizeof(GLfloat) * 32);
+	//glBindBufferRange(GL_UNIFORM_BUFFER, bindingPoint, uboID, offset, sizeInBytes)
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, 1, 0, sizeof(GLfloat) * 32); ///////////WHY uboID = 1??
 
 	// Bind VAO and IBO
 	glBindVertexArray(vaoBunny);
@@ -194,6 +198,7 @@ void display(void)
 	glUseProgram(progSimple);		
 	glDrawElements(GL_TRIANGLES, bunnyIndicesSize/bunnyIndicesStride, GL_UNSIGNED_INT, 0);
 	glUseProgram(0);
+	
 
 	// Draw hair
 	glUseProgram(progHair);
@@ -262,12 +267,15 @@ void initGL()
 	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 45.2776f);
 
 	// DONE: Uniform Buffer Object für die Camera Matrizen anlegen.
+	// glGenBuffers(1, &myUBO);
 	glGenBuffers(1, &uboCamera);
 	
 	// DONE: Das UBO binden (target = GL_UNIFORM_BUFFER)
+	//glBindBuffer(GL_UNIFORM_BUFFER, myUBO);
 	glBindBuffer(GL_UNIFORM_BUFFER, uboCamera);
 		
 	// DONE: Speicherplatz allokieren mit glBufferData. Reservieren Sie Platz für 2 4x4 Matrizen mit float-Einträgen. Data = NULL und Usage = GL_STREAM_DRAW
+	//glBufferData(GL_UNIFORM_BUFFER, sizeInBytes, NULL, GL_STREAM_DRAW);
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(GLfloat) * 32, NULL, GL_STREAM_DRAW);
 
 	// Initialize camera
@@ -280,6 +288,7 @@ void initGL()
 		// Verwenden Sie dazu die Befehle glGetFloatv und glBufferSubData
 	GLfloat projMat[16];
 	glGetFloatv(GL_PROJECTION_MATRIX, projMat);
+	//glBufferSubData(GL_UNIFORM_BUFFER, startIndex(inBytes), sizeInBytes, dataPointer);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(projMat), projMat);
 	
 	// Viewmatrix initialisieren
