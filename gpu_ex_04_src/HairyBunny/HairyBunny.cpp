@@ -41,7 +41,10 @@ GLuint vaoBunny;
 GLuint iboBunny;
 GLuint progSimple;
 GLuint progHair;
+GLuint progThickHair;
 GLuint uboCamera;
+GLuint transformfeedback;
+GLuint tfvbo;
 
 extern float bunnyData[];
 extern unsigned int bunnyStride;
@@ -204,6 +207,11 @@ void display(void)
 	glUseProgram(progHair);
 	glDrawElements(GL_TRIANGLES, bunnyIndicesSize/bunnyIndicesStride, GL_UNSIGNED_INT, 0);
 	glUseProgram(0);
+
+	//Draw ThickHair
+	glUseProgram(progThickHair);
+	glDrawElements(GL_TRIANGLES, bunnyIndicesSize / bunnyIndicesStride, GL_UNSIGNED_INT, 0);
+	glUseProgram(0);
 	
 	// Unbind VAO and IBO
 	glBindVertexArray(0);
@@ -242,6 +250,12 @@ void initBunny()
 		glEnableVertexAttribArray(1);
 		glEnableVertexAttribArray(2);
 	glBindVertexArray(0);
+
+	glGenBuffers(1, &tfvbo);
+	glBindBuffer(GL_ARRAY_BUFFER, tfvbo);
+	glBufferData(GL_ARRAY_BUFFER, bunnySize * 24, NULL, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 }
 
 void initGL()
@@ -253,6 +267,7 @@ void initGL()
 	glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_col);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, light_col);
+	//glClearColor(1, 1, 1, 1);
 
 	// Enable lighting
 	glEnable(GL_LIGHTING);
