@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GlowingTeapot", "GlowingTeapot\GlowingTeapot.vcxproj", "{BB5CED12-EB3A-42F2-9DA4-9D8C94A8CAF7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PumpingTeapot", "PumpingTeapot\PumpingTeapot.vcxproj", "{D7E46B80-E0BF-4E33-B68C-8EA8070E7FCA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SSAA", "SSAA\SSAA.vcxproj", "{9D6095D2-F9FD-410D-8E13-04DB2CAC6748}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BB5CED12-EB3A-42F2-9DA4-9D8C94A8CAF7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BB5CED12-EB3A-42F2-9DA4-9D8C94A8CAF7}.Debug|Win32.Build.0 = Debug|Win32
+		{BB5CED12-EB3A-42F2-9DA4-9D8C94A8CAF7}.Release|Win32.ActiveCfg = Release|Win32
+		{BB5CED12-EB3A-42F2-9DA4-9D8C94A8CAF7}.Release|Win32.Build.0 = Release|Win32
+		{D7E46B80-E0BF-4E33-B68C-8EA8070E7FCA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D7E46B80-E0BF-4E33-B68C-8EA8070E7FCA}.Debug|Win32.Build.0 = Debug|Win32
+		{D7E46B80-E0BF-4E33-B68C-8EA8070E7FCA}.Release|Win32.ActiveCfg = Release|Win32
+		{D7E46B80-E0BF-4E33-B68C-8EA8070E7FCA}.Release|Win32.Build.0 = Release|Win32
+		{9D6095D2-F9FD-410D-8E13-04DB2CAC6748}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9D6095D2-F9FD-410D-8E13-04DB2CAC6748}.Debug|Win32.Build.0 = Debug|Win32
+		{9D6095D2-F9FD-410D-8E13-04DB2CAC6748}.Release|Win32.ActiveCfg = Release|Win32
+		{9D6095D2-F9FD-410D-8E13-04DB2CAC6748}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

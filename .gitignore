@@ -26,3 +26,16 @@
 *.exe
 *.out
 *.app
+*.ilk
+*.pdb
+*.sdf
+*.suo
+*.log
+*.tlog
+*.idb
+*.lastbuildstate
+gpu_ex_03_src/GlowingTeapot/GlowingTeapot.vcxproj
+gpu_ex_03_src/PumpingTeapot/PumpingTeapot.vcxproj
+gpu_ex_03_src/SSAA/SSAA.vcxproj
+*.opensdf
+gpu_ex_04_src/HairyBunny/HairyBunny.vcxproj.filters
