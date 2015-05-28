@@ -44,7 +44,7 @@ void main(void)
 //task 02
 #version 150
 
-#define OUT_VERTS 12
+#define OUT_VERTS 10
 
 layout(triangles) in;
 
@@ -107,7 +107,7 @@ layout(triangles) in;
 //added
 in vec3 normal[];
 
-//changed to line strip
+//changed to triangle strip
 layout(triangle_strip, max_vertices = OUT_VERTS) out;
 out vec3 normal_out;
 
@@ -120,9 +120,6 @@ layout(std140) uniform GlobalMatrices
 
 void main(void)
 {
-	
-
-
 	gl_Position = vec4(0);
 	for(int i=0; i< gl_in.length(); i++){
 		vec3 lookat = gl_in[i].gl_Position.xyz - vec3(View[0].z,View[1].z,View[2].z);

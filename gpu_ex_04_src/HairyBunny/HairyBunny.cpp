@@ -208,10 +208,12 @@ void display(void)
 	glDrawElements(GL_TRIANGLES, bunnyIndicesSize/bunnyIndicesStride, GL_UNSIGNED_INT, 0);
 	glUseProgram(0);
 
-	//Draw ThickHair
+	//Draw ThickHair 
+	/*
 	glUseProgram(progThickHair);
 	glDrawElements(GL_TRIANGLES, bunnyIndicesSize / bunnyIndicesStride, GL_UNSIGNED_INT, 0);
 	glUseProgram(0);
+	*/
 	
 	// Unbind VAO and IBO
 	glBindVertexArray(0);
@@ -290,7 +292,7 @@ void initGL()
 	glBindBuffer(GL_UNIFORM_BUFFER, uboCamera);
 		
 	// DONE: Speicherplatz allokieren mit glBufferData. Reservieren Sie Platz für 2 4x4 Matrizen mit float-Einträgen. Data = NULL und Usage = GL_STREAM_DRAW
-	//glBufferData(GL_UNIFORM_BUFFER, sizeInBytes, NULL, GL_STREAM_DRAW);
+	//glBufferData(GL_UNIFORM_BUFFER, sizeInBytes, data, GL_STREAM_DRAW);
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(GLfloat) * 32, NULL, GL_STREAM_DRAW);
 
 	// Initialize camera
