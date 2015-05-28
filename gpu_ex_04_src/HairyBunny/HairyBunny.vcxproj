@@ -92,7 +92,6 @@
     <None Include="hair.vert" />
     <None Include="simple.frag" />
     <None Include="simple.vert" />
-    <None Include="thickHairGeom2.geom" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

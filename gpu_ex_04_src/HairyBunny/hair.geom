@@ -109,7 +109,11 @@ in vec3 normal[];
 
 //changed to triangle strip
 layout(triangle_strip, max_vertices = OUT_VERTS) out;
+
 out vec3 normal_out;
+out vec3 normal2_out;
+out vec3 shading_normal;
+out vec3 smooth_out;
 
 layout(std140) uniform GlobalMatrices
 {
@@ -127,39 +131,51 @@ void main(void)
 
 		vec3 Point = gl_in[i].gl_Position.xyz;
 		vec3 Normal = normalize(normal[i].xyz);
-		normal_out= vec3(1,1,1);
-
+		normal_out= lookat;
+		normal2_out = Normal;
+		shading_normal = Normal +lookat;
 		gl_Position = Projection * View * vec4(Point,1);
+		smooth_out = vec3(1,1,1);
 		EmitVertex();
 
 		vec3 r = normalize(cross(Normal,-lookat));
 		vec4 t = vec4(Point,1);
 		t = t + 0.005 * vec4(Normal,0) + 0.01 * vec4(r,0);
-		normal_out = vec3(1,1,1);
+		normal_out = lookat;
+		normal2_out = Normal;
+		shading_normal = Normal - lookat;
+		smooth_out = vec3(1,1,1);
 		gl_Position = Projection * View * t;
 		EmitVertex();
 
         vec4 l = vec4(Point,1);
 		l = l + 0.01 * vec4(Normal,0);       //used some random number -> result looks acceptable
 		gl_Position = Projection * View * l; 
-
-		normal_out = vec3(1,1,1);
+		normal_out = lookat;
+		normal2_out = Normal;
+		smooth_out = vec3(1,1,1);
+		shading_normal = Normal +lookat;
 		EmitVertex();
 
 		//gravity
 		for(int j = 2; j < OUT_VERTS; j++)
 		{
-			vec4 diff = 0.01 *vec4(Normal,0) - 0.003 *j*vec4(0,1,0,0); 
+			vec4 diff = 0.01 *vec4(Normal,0) - 0.002 *j*vec4(0,1,0,0); 
 			diff = 0.01*normalize(diff);
 			r = normalize(cross(diff.xyz,-lookat));
 			
 			l = l + diff;
-			t = l + 0.005 * vec4(Normal,0) + 0.02 / j * vec4(r,0);
-		normal_out = vec3(1,1,1) * 1/j;
+			t = l + 0.005 * vec4(Normal,0) + 0.03 / j * vec4(r,0);
+			normal_out = lookat;
 			gl_Position = Projection * View * t;
+			shading_normal = Normal - lookat;
+			smooth_out = vec3(1,1,1) * 1/j;
 			EmitVertex();
-		normal_out = vec3(1,1,1) * 1/j;
+			normal_out = lookat;
+			normal2_out = Normal;
+			smooth_out = vec3(1,1,1) * 1/j;
 			gl_Position = Projection * View * l;
+			shading_normal = Normal +lookat;
 		    EmitVertex();
 		}
 		
