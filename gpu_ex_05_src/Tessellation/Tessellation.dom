@@ -4,8 +4,8 @@
 //DONE
 // spacing schemes: fractional_even_spacing, fractional_odd_spacing, equal_spacing -> sucht euch was aus :)
 
-layout(triangles,fractional_odd_spacing,ccw) in;
-//layout(triangles,fractional_even_spacing,ccw) in;
+//layout(triangles,fractional_odd_spacing,ccw) in;
+layout(triangles,fractional_even_spacing,ccw) in;
 //layout(triangles,equal_spacing,ccw) in;
 
 // inputs from the hull shader.

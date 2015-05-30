@@ -31,13 +31,13 @@ layout(std140) uniform GlobalMatrices
 void main()
 {
 
-	if(id == 0)
-	{
+
 		mat4 inv = (inverse(View));
-		vec4 e= inv * vec4(vec3(0,0,0),1);
+		vec4 e= inv * vec4(0,0,0,1);
 		vec3 eye = e.xyz; 
-	float dist = 1-(length(eye-gl_in[0].gl_Position.xyz) / 3000);
+	float dist = 1-(length(eye-gl_in[0].gl_Position.xyz) / 7000);
 		// TODO: Dem Tessellator die Tessellation Factors mitteilen.
+		//DONE
 		float max = 32;
 		float min = 1;
 		dist = max *dist < min ? min : max*dist > max ? max : max * dist;
@@ -46,7 +46,7 @@ void main()
 		gl_TessLevelOuter[1] = dist;
 		gl_TessLevelOuter[2] = dist;
 		// Zusatzaufgabe: Nicht direkt die Werte aus dem UBO lesen, sondern Distanz-abhängig von der Kamera machen!
-    }
+		//DONE
 	
 	// TODO: Position, Normale und Texturkoordinaten durchreichen
 	gl_out[id].gl_Position = gl_in[id].gl_Position;
