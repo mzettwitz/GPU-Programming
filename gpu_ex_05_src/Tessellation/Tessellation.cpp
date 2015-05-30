@@ -257,12 +257,15 @@ void display(void)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboelephant);
 
 	// TODO: Shader binden
-	// glUseProgram(progTessellation);
-
-	// TODO: GL mitteilen, dass ein Patch aus drei Vertices besteht
+	//DONE
+	glUseProgram(progTessellation);
 	
+	// TODO: GL mitteilen, dass ein Patch aus drei Vertices besteht
+	//DONE
+	glPatchParameteri(GL_PATCH_VERTICES, 3);
 	// TODO: Primitiv-Typ auf Patches umstellen.
-	glDrawElements(GL_TRIANGLES, elephantIndicesSize/elephantIndicesStride, GL_UNSIGNED_INT, 0);
+	//DONE
+	glDrawElements(GL_PATCHES, elephantIndicesSize/elephantIndicesStride, GL_UNSIGNED_INT, 0);
 	glUseProgram(0);
 	
 	// Unbind VAO and IBO
