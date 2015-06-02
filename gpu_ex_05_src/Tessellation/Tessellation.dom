@@ -1,0 +1,71 @@
+#version 400
+
+// TODO: Topology, spacing sceme und winding order (counter clock wise) angeben! (layout modifier)
+//DONE
+// spacing schemes: fractional_even_spacing, fractional_odd_spacing, equal_spacing -> sucht euch was aus :)
+
+//layout(triangles,fractional_odd_spacing,ccw) in;
+layout(triangles,fractional_even_spacing,ccw) in;
+//layout(triangles,equal_spacing,ccw) in;
+
+// inputs from the hull shader.
+in vec3 hs_out_Position[];
+in vec3 hs_out_Normal[];
+in vec2 hs_out_TexCoord[];
+
+// output of the domain shader.
+out vec3 ds_out_Normal;
+out vec2 ds_out_TexCoord;
+
+layout(std140) uniform GlobalMatrices
+{
+	mat4 Projection;
+	mat4 View;
+};
+
+layout(std140) uniform TessFactors
+{
+	float insideTess;
+	float outsideTess;
+	float alpha;
+};
+
+void main()
+{
+	// TODO: Baryzentrische Interpolation zwischen den drei Eckpunkten durchführen, um den Punkt p im Dreieck zu bestimmen.
+	//Done
+	float u = gl_TessCoord.x;
+	float v = gl_TessCoord.y;
+	float w = gl_TessCoord.z;
+
+	vec3 p = hs_out_Position[0] * u + hs_out_Position[1] * v + hs_out_Position[2] * w;
+
+	// TODO: Projektion des Punktes p in die Tangentialebenen der Eckpunkte, wiederum baryzentrische Interpolation zwischen den projizierten Punkten ergibt Punkt q.
+	//DONE MOFO!
+	vec3 normal0 = hs_out_Normal[0];
+	vec3 normal1 = hs_out_Normal[1];
+	vec3 normal2 = hs_out_Normal[2];
+
+
+	vec3 t0 = p - (dot((p - hs_out_Position[0]),normal0))/(dot(normal0,normal0)) * normal0;
+	vec3 t1 = p - (dot((p - hs_out_Position[1]),normal1))/(dot(normal1,normal1)) * normal1;
+	vec3 t2 = p - (dot((p - hs_out_Position[2]),normal2))/(dot(normal2,normal2)) * normal2;
+	vec3 q = t0 * u + t1 * v + t2 * w;
+
+	// TODO: Lineare Interpolation zwischen p und q anhand von alpha ergibt den fertigen Punkt x.
+	//DONE
+    vec3 x = mix(p,q,alpha);
+
+	// TODO: Baryzentrische Interpolation der Texturkoordinaten und Normalen.
+	//DONE
+	vec3 normal = hs_out_Normal[0] * u + hs_out_Normal[1] * v + hs_out_Normal[2] * w;
+	ds_out_TexCoord = hs_out_TexCoord[0] * u + hs_out_TexCoord[1] * v + hs_out_TexCoord[2] *w;
+
+	// TODO: Normale in den View Space transformieren.
+	//DONE
+	ds_out_Normal = normalize((transpose(inverse(View)) * vec4(normal,1)).xyz);
+
+	// TODO: Punkt x in den Clipping Space transformieren und rausreichen.#
+	//DONE
+	gl_Position = Projection * View * vec4(x,1);
+}
