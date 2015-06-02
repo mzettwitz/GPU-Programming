@@ -144,13 +144,13 @@ void display(void)
 	// Starte query (nur für Debugging gedacht!)
 	glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, Query);
 
-	// TODO: Binden des Feedback Objekts (feedback_streamTo)
+	// DONE: Binden des Feedback Objekts (feedback_streamTo)
 	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedback_streamTo);
 
-	// TODO: Beginne Feedback Recording von GL_POINTS
+	// DONE: Beginne Feedback Recording von GL_POINTS
 	glBeginTransformFeedback(GL_POINTS);
 
-	// TODO: Binden des VAO von dem gelesen werden soll
+	// DONE: Binden des VAO von dem gelesen werden soll
 	glBindVertexArray(vao_readFrom);
 
 	// In der ersten Iteration glDrawArrays verwenden, später den Feedback Draw Call nehmen.
@@ -158,12 +158,12 @@ void display(void)
 		glDrawArrays(GL_POINTS, 0, NUM_SEEDS * 2);
 	}
 	else {
-		// TODO: Den Transform Feedback Draw-Call nehmen, da dieser bereits weiß, wieviele Vertices sich derzeit im Stream befinden.
+		// DONE: Den Transform Feedback Draw-Call nehmen, da dieser bereits weiß, wieviele Vertices sich derzeit im Stream befinden.
 		// D.h. wir müssen diese Zahl nicht per Query zurücklesen, um den Draw-Call abzusetzen.
 		glDrawTransformFeedback(GL_POINTS, feedback_readFrom);
 	}
 
-	// TODO: Beenden des Feedback Recording
+	// DONE: Beenden des Feedback Recording
 	glEndTransformFeedback();
 
 	// End query
@@ -394,20 +394,19 @@ void initVertexArray()
 
 void initFeedback()
 {
-	// TODO: Buffer Objekt generieren und in Variable feedback_readFrom speichern.
-
+	// DONE: Buffer Objekt generieren und in Variable feedback_readFrom speichern.
 	glGenTransformFeedbacks(1, &feedback_readFrom);
-	// TODO: Buffer Objekt binden
+
+	// DONE: Buffer Objekt binden
 	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedback_readFrom);
-	// TODO: vbo_readFrom mit dem Buffer Objekt verknüpfen (wenn man das Transform Feedback Objekt bindet, wird künftig in dieses VBO geschrieben)
+
+	// DONE: vbo_readFrom mit dem Buffer Objekt verknüpfen (wenn man das Transform Feedback Objekt bindet, wird künftig in dieses VBO geschrieben)
 	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, vbo_readFrom);
 
-	// TODO: Buffer Objekt unbinden
+	// DONE: Buffer Objekt unbinden
 	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 
-	// TODO: Das selbe nochmal für feedback_streamTo
-
-
+	// DONE: Das selbe nochmal für feedback_streamTo
 	glGenTransformFeedbacks(1, &feedback_streamTo);
 	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedback_streamTo);
 	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, vbo_streamTo);
@@ -436,7 +435,7 @@ void idle()
 int main(int argc, char** argv)
 {
 	// Load vector field (raw data, resolution of the grid and the bounding box).
-	const char* FileName = "D://Dokumente//Uni//GPU//Uebung//Uebung5//Cylinder2D//Cylinder2D.am";
+	const char* FileName = "D:\Cylinder/Cylinder2D.am";
 	float* flowData = LoadField(FileName, &dim[0], &dim[1], &dim[2], &box_min[0], &box_min[1], &box_min[2], &box_max[0], &box_max[1], &box_max[2]);
 
 	if (!flowData)

@@ -90,36 +90,24 @@ void main(void)
 	// Derzeitigen Zustand übernehmen (auf Ausgabevariablen schreiben)
 	gs_out_Position = vs_out[0].PositionA;
 	gs_out_State = vs_out[0].StateA;
+
+	// Out values for the next particle
 	vec2 nextParticle_Position = vs_out[0].PositionB;
 	uint nextParticle_State = vs_out[0].StateB;
 
-	// TODO: Wenn nicht "Head" dann advektieren.
-	if(gs_out_State!=HEAD){
+	// DONE: Wenn nicht "Head" dann advektieren.   >>>> MUSS NICHT TAIL, SONST FEHLER
+	if(gs_out_State != TAIL)
+		gs_out_Position = advect(gs_out_Position);
 
-	gs_out_Position= advect(gs_out_Position);
-
-	}
-
-
-	if(gs_out_State!=TAIL){
-
-	nextParticle_Position= advect(nextParticle_Position);
-
-	}
-
-	// TODO: Ist das Partikel im erlaubten Domain? (Weder Domain verlassen, noch im Zylinder)
-	if(inGrid(gs_out_Position)&&!inObstacle(gs_out_Position))
+	// DONE: Ist das Partikel im erlaubten Domain? (Weder Domain verlassen, noch im Zylinder)
+	if(inGrid(gs_out_Position) && !inObstacle(gs_out_Position))
 	{
 		// Transformieren des Partikels auf den Viewport
 		gl_Position = Projection * vec4(gs_out_Position, 0,1);
 
-		// TODO: Wenn der Nachfolger das Domain verlassen hat, wird dieses Partikel zum neuen "Tail".
-		if(!inGrid(nextParticle_Position)){
-
-		gs_out_State= TAIL;
-
-
-		}
+		// DONE: Wenn der Nachfolger das Domain verlassen hat, wird dieses Partikel zum neuen "Tail".
+		if(!inGrid(nextParticle_Position))
+			gs_out_State = TAIL;		
 		
 		// Emitieren des Partikels
 		EmitVertex();
@@ -128,24 +116,22 @@ void main(void)
 		// --------------------------------------------
 		// Refinement
 		// --------------------------------------------
-		// TODO: Falls nicht Tail, time<1 und Distance zwischen diesem und nachfolgendem Partikel größer ist als refinementThreshold
-		if(gs_out_State!=TAIL&&time<1)
+		// DONE: Falls nicht Tail, time<1 und Distance zwischen diesem und nachfolgendem Partikel größer ist als refinementThreshold
+		if(gs_out_State != TAIL && time < 1)
 		{
 
-		vec2 distance_vec = nextParticle_Position - gs_out_Position;
-		float distance= length(distance_vec);
+			vec2 distance_vec = nextParticle_Position - gs_out_Position;
+			float distance = length(distance_vec);
 
-		// TODO: Neues Body-Partikel in der Mitte (zwischen aktuellem und nachfolgendem Partikel) einfügen
-			if(distance> refinementThreshold){
+			// DONE: Neues Body-Partikel in der Mitte (zwischen aktuellem und nachfolgendem Partikel) einfügen
+			if(distance > refinementThreshold){
 
-			gs_out_Position= gs_out_Position+distance_vec*0.5;
-			gs_out_State= BODY;
-			gl_Position= Projection*vec4(gs_out_Position,0,1);
+				gs_out_Position = gs_out_Position + distance_vec * 0.5;
+				gs_out_State = BODY;
+				gl_Position = Projection * vec4(gs_out_Position,0,1);
 
-			EmitVertex();
-			EndPrimitive();
-			
-			
+				EmitVertex();
+				EndPrimitive();			
 			}
 		}
 
