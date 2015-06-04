@@ -92,11 +92,11 @@ void main(void)
 	gs_out_State = vs_out[0].StateA;
 
 	// Out values for the next particle
-	vec2 nextParticle_Position = vs_out[0].PositionB;
+	vec2 nextParticle_Position = advect(vs_out[0].PositionB);
 	uint nextParticle_State = vs_out[0].StateB;
 
-	// DONE: Wenn nicht "Head" dann advektieren.   >>>> MUSS NICHT TAIL, SONST FEHLER
-	if(gs_out_State != TAIL)
+	// DONE: Wenn nicht "Head" dann advektieren.
+	if(gs_out_State != HEAD)
 		gs_out_Position = advect(gs_out_Position);
 
 	// DONE: Ist das Partikel im erlaubten Domain? (Weder Domain verlassen, noch im Zylinder)
@@ -106,7 +106,7 @@ void main(void)
 		gl_Position = Projection * vec4(gs_out_Position, 0,1);
 
 		// DONE: Wenn der Nachfolger das Domain verlassen hat, wird dieses Partikel zum neuen "Tail".
-		if(!inGrid(nextParticle_Position))
+		if(!inGrid(nextParticle_Position) || inObstacle(nextParticle_Position))
 			gs_out_State = TAIL;		
 		
 		// Emitieren des Partikels
