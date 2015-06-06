@@ -267,14 +267,21 @@ void display()
 
 	// ********** voxelize teapot into integer texture ************
 	
-	// TODO: FBO binden, in das gerendert werden soll. Clearen Sie das FBO und binden Sie den Voxelisierungs-Shader.
+	// TODO: FBO binden, in das gerendert werden soll. Clearen Sie das FBO und binden Sie den Voxelisierungs-Shader.	
+	// FBO Textur als aktive Textur binden.
+	glBindFramebuffer(GL_FRAMEBUFFER, voxelizationFB);	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(shaderProgramVoxelization);	
 	
-	// TODO: Viewport auf Auflösung der Voxel-Textur setzen.	
+	// DONE: Viewport auf Auflösung der Voxel-Textur setzen.
+	glViewport(0, 0, VOXEL_WIDTH, VOXEL_HEIGHT);
 
-	// TODO: Tiefentest deaktivieren.
+	// DONE: Tiefentest deaktivieren.
+	glDisable(GL_DEPTH_TEST);
 	
-	// TODO: Logik-Operation aktivieren. Anstatt den Farbwert in das Target zu schreiben, 
+	// DONE: Logik-Operation aktivieren. Anstatt den Farbwert in das Target zu schreiben, 
 	// werden die Komponenten des Pixels als UINTs aufgefasst und mit dem Pixel im FBO mit OR verknüpft ("reingeodert"...)	
+	glLogicOp(GL_OR);
 
 	// Projektionsmatrix setzen
 	glMatrixMode(GL_PROJECTION);
@@ -287,20 +294,29 @@ void display()
 
 	// Kanne rotieren
 	glRotatef(angle, 0.0f, 1.0f, 0.0f);
-	angle += 0.1f;
+	angle += 0.5f;
 
 	// Kanne zeichnen
 	glutSolidTeapot(0.7);
 	
 	// TODO: Rendern in FBO beenden (Backbuffer wieder aktiv) und Fixed-Function Pipeline aktivieren.
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glUseProgram(0);
 
 	// *************** read voxel texture for visualization *************
 	// TODO: Texturdaten der Voxelisierungs-Textur auslesen.
+	glBindTexture(GL_TEXTURE_2D, voxelizationTextureId);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_INT, pixels);
 
 	// **************** draw the voxel model ****************
 	// TODO: Viewport auf Bildschirmauflösung setzen und Backbuffer clearen.
+	glViewport(0, 0, PIC_WIDTH, PIC_HEIGHT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	// TODO: Tiefentest an, Beleuchtung und Logik-Operationen aus.
+	// DONE: Tiefentest an, Beleuchtung und Logik-Operationen aus.
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_LIGHTING);
+	glLogicOp(GL_CLEAR);
 	
 	// Perspektivische Projektionsmatrix
 	glMatrixMode(GL_PROJECTION);
