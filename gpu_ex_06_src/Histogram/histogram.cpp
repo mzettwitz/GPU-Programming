@@ -291,9 +291,10 @@ void display()
 	//DONE
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ONE);
-	//glBlendEquation(GL_ADD); // TEST IF NEEDED!
+	glBlendEquation(GL_ADD); // TEST IF NEEDED!
 	
 	// TODO: Tiefentest und Beleuchtung abschalten
+	//DONE
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_LIGHTING);
 	
@@ -301,7 +302,6 @@ void display()
 
 	float numpixel = PIC_HEIGHT*PIC_WIDTH;
 	glUseProgram(shaderProgramCreateHistogram); 
-	//MAAAAAAAAAAAAAAAAAGIC
 	glUseProgram(0);
 
 
@@ -327,7 +327,23 @@ void display()
 	// die Einheitsmatrix setzen und die Vertices direkt im Clipping-Space an die GPU schicken
 	// oder alternativ eine Projektionsmatrix bauen, die es Ihnen erlaubt, die Positionen in
 	// Bildschirmkoordinaten (0..PIC_WIDTH-1, 0..PIC_HEIGHT-1) anzugeben.
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, PIC_WIDTH, 0, PIC_HEIGHT, -1, 1);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINES);
+	for (int i = 0; i < 256; ++i)
+	{
+		glColor3f(1.0f, 1.0f, 1.0f);
+		glVertex3f(float(i), 0.0f, 0.0f);
+		glVertex3f(float(i), hPixels[i] / float(PIC_HEIGHT * PIC_WIDTH), 0.0f); // TODO , doesn't work this way
+		//glVertex3f(i,i,0);											//for dummy purpose, draws a triangle build from lines
+	}
+	glEnd();
+	glEnable(GL_LIGHTING);
 	
 	// Frame ist beendet, Buffer swappen.
 	glutSwapBuffers();
