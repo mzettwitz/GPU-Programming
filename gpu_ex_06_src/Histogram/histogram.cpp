@@ -334,15 +334,19 @@ void display()
 	glLoadIdentity();
 
 	glDisable(GL_LIGHTING);
+	
 	glBegin(GL_LINES);
 	for (int i = 0; i < 256; ++i)
 	{
+
 		glColor3f(1.0f, 1.0f, 1.0f);
 		glVertex3f(float(i), 0.0f, 0.0f);
 		glVertex3f(float(i), hPixels[i] / float(PIC_HEIGHT * PIC_WIDTH), 0.0f); // TODO , doesn't work this way
-		//glVertex3f(i,i,0);											//for dummy purpose, draws a triangle build from lines
+		//glVertex3f(i,i,0);		//for dummy purpose, draws a triangle build from lines
+
 	}
 	glEnd();
+	
 	glEnable(GL_LIGHTING);
 	
 	// Frame ist beendet, Buffer swappen.

@@ -22,8 +22,9 @@ void main()
 	// TODO: Die Position in [0,1] auf das Intervall [-1,1] abbilden.
 	//DONE
 
-	vec2 Vertex = vec2(0);
-	Vertex.x = (xPosition - SCREEN_WIDTH / 2.0) / (SCREEN_WIDTH / 2.0);
+	float vertex = 0.0;
+	vertex = (xPosition - SCREEN_WIDTH / 2.0) / (SCREEN_WIDTH / 2.0);
+	//vertex = xPosition - SCREEN_WIDTH / 2;
 
-	gl_Position = vec4(Vertex.x, -1.0, 0.0, 1.0);
+	gl_Position = vec4(vertex, -1.0, 0.0, 1.0);
 }

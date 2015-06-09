@@ -228,6 +228,56 @@ void drawVoxel(float x, float y, float z)
 
 	// TODO: Rendern Sie einen Cube mit dem Zentrum an der Position (x,y,z) und der Ausdehnung sizeX x sizeY x sizeZ.
 	// Um die Visualisierung deutlicher zu machen, sollen die Eckpunkte einer jeden Seitenwand unterschiedliche Farben haben.
+
+	// only plain colored sides of the cube at the moment
+
+	glBegin(GL_QUADS);                
+	// Begin drawing the color cube with 6 quads
+	// Define vertices in counter-clockwise (CCW) order
+	// Top face (y = 1.0f)	
+	glColor3f(0.0f, 1.0f, 0.0f);     // Green
+	glVertex3f(x - sizeX/2, y + sizeY/2, z + sizeZ/2);
+	glVertex3f(x + sizeX/2, y + sizeY/2, z + sizeZ/2);
+	glVertex3f(x + sizeX/2, y + sizeY/2, z - sizeZ/2);
+	glVertex3f(x - sizeX/2, y + sizeY/2, z - sizeZ/2);
+
+	// Bottom face (y = -1.0f)
+	glColor3f(1.0f, 0.5f, 0.0f);     // Orange
+	glVertex3f(x - sizeX / 2, y - sizeY / 2, z + sizeZ / 2);
+	glVertex3f(x + sizeX / 2, y - sizeY / 2, z + sizeZ / 2);
+	glVertex3f(x + sizeX / 2, y - sizeY / 2, z - sizeZ / 2);
+	glVertex3f(x - sizeX / 2, y - sizeY / 2, z - sizeZ / 2);
+
+	// Front face  (z = 1.0f)
+	glColor3f(1.0f, 0.0f, 0.0f);     // Red
+	glVertex3f(x - sizeX / 2, y - sizeY / 2, z + sizeZ / 2);
+	glVertex3f(x + sizeX / 2, y - sizeY / 2, z + sizeZ / 2);
+	glVertex3f(x + sizeX / 2, y + sizeY / 2, z + sizeZ / 2);
+	glVertex3f(x - sizeX / 2, y + sizeY / 2, z + sizeZ / 2);
+
+	// Back face (z = -1.0f)
+	glColor3f(1.0f, 1.0f, 0.0f);     // Yellow
+	glVertex3f(x - sizeX / 2, y - sizeY / 2, z - sizeZ / 2);
+	glVertex3f(x + sizeX / 2, y - sizeY / 2, z - sizeZ / 2);
+	glVertex3f(x + sizeX / 2, y + sizeY / 2, z - sizeZ / 2);
+	glVertex3f(x - sizeX / 2, y + sizeY / 2, z - sizeZ / 2);
+
+	// Left face (x = -1.0f)
+	glColor3f(0.0f, 0.0f, 1.0f);     // Blue
+	glVertex3f(x - sizeX / 2, y - sizeY / 2, z - sizeZ / 2);
+	glVertex3f(x - sizeX / 2, y - sizeY / 2, z + sizeZ / 2);
+	glVertex3f(x - sizeX / 2, y + sizeY / 2, z + sizeZ / 2);
+	glVertex3f(x - sizeX / 2, y + sizeY / 2, z - sizeZ / 2);
+
+	// Right face (x = 1.0f)
+	glColor3f(1.0f, 0.0f, 1.0f);     // Magenta
+	glVertex3f(x + sizeX / 2, y - sizeY / 2, z - sizeZ / 2);
+	glVertex3f(x + sizeX / 2, y - sizeY / 2, z + sizeZ / 2);
+	glVertex3f(x + sizeX / 2, y + sizeY / 2, z + sizeZ / 2);
+	glVertex3f(x + sizeX / 2, y + sizeY / 2, z - sizeZ / 2);
+	glEnd();
+	
+
 }
 
 void drawVoxelModel()
