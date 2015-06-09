@@ -158,7 +158,7 @@ int initFBOTextures()
 	// Textur anlegen
 	glGenTextures (1, &imageTextureId);
 	glBindTexture (GL_TEXTURE_2D, imageTextureId);
-	glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, PIC_WIDTH, PIC_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_INT, NULL);
+	glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA32F, PIC_WIDTH, PIC_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -167,7 +167,7 @@ int initFBOTextures()
 	// Depth Buffer Textur anlegen 
 	glGenTextures (1, &depthTextureId);
 	glBindTexture (GL_TEXTURE_2D, depthTextureId);
-	glTexImage2D (GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, PIC_WIDTH, PIC_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D (GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, PIC_WIDTH, PIC_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -180,7 +180,7 @@ int initFBOTextures()
 	// Texture für Histogrammdaten
 	glGenTextures (1, &histogramTextureId);
 	glBindTexture (GL_TEXTURE_2D, histogramTextureId);
-	glTexImage2D (GL_TEXTURE_2D, 0, GL_R8, 256, 1, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D (GL_TEXTURE_2D, 0, GL_R32F, 256, 1, 0, GL_RED, GL_FLOAT, NULL);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 	// FBO für Histogrammdaten Textur
@@ -265,12 +265,14 @@ void display()
 {
 	float hPixels[256];
 
+	glClampColor(GL_CLAMP_FRAGMENT_COLOR, GL_FALSE);
+	glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE);
 	int timeStart = glutGet(GLUT_ELAPSED_TIME);
 
 	// ********* Teekanne in FBO rendern **********
 		
 	// FBO binden, in das gerendert werden soll.
-	glBindFramebuffer (GL_FRAMEBUFFER, createImageFB);      // activate fbo                 
+	glBindFramebuffer (GL_FRAMEBUFFER, createImageFB);      // activate fbo   
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Teekanne rendern.
@@ -290,9 +292,9 @@ void display()
 	// TODO: Additives Blending aktivieren (mit jedem ankommenden Pixel wird der Counter um 1 erhöht)
 	//DONE
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE);
+	glBlendFunc(GL_ONE,GL_ONE);
 	glBlendEquation(GL_ADD); // TEST IF NEEDED!
-	
+
 	// TODO: Tiefentest und Beleuchtung abschalten
 	//DONE
 	glDisable(GL_DEPTH_TEST);
@@ -301,12 +303,19 @@ void display()
 	// TODO: Histogram-Shader für jedes Pixel des Bildes ausführen.
 
 	float numpixel = PIC_HEIGHT*PIC_WIDTH;
+	
 	glUseProgram(shaderProgramCreateHistogram); 
+	glBegin(GL_POINTS);
+	for (int i = 0; i < numpixel; ++i)
+	{
+		glVertex3f(i % PIC_WIDTH, i / PIC_HEIGHT, -1.0f);
+	}
+	glEnd();
 	glUseProgram(0);
 
 
 	// Histogramm-Daten von VRAM zu RAM streamen (in das Array hPixels)
-	glReadPixels(0, 0, 256, 1, GL_R, GL_FLOAT, hPixels);
+	glReadPixels(0, 0, 256, 1, GL_RED, GL_FLOAT, hPixels);
 
 	// TODO: Blending abschalten
 	//DONE
@@ -332,16 +341,15 @@ void display()
 	glOrtho(0, PIC_WIDTH, 0, PIC_HEIGHT, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-
 	glDisable(GL_LIGHTING);
 	
 	glBegin(GL_LINES);
 	for (int i = 0; i < 256; ++i)
 	{
-
+		
 		glColor3f(1.0f, 1.0f, 1.0f);
 		glVertex3f(float(i), 0.0f, 0.0f);
-		glVertex3f(float(i), hPixels[i] / float(PIC_HEIGHT * PIC_WIDTH), 0.0f); // TODO , doesn't work this way
+		glVertex3f(float(i), hPixels[i] * 50, 0.0f);
 		//glVertex3f(i,i,0);		//for dummy purpose, draws a triangle build from lines
 
 	}
