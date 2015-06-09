@@ -228,7 +228,7 @@ void drawVoxel(float x, float y, float z)
 
 	// TODO: Rendern Sie einen Cube mit dem Zentrum an der Position (x,y,z) und der Ausdehnung sizeX x sizeY x sizeZ.
 	// Um die Visualisierung deutlicher zu machen, sollen die Eckpunkte einer jeden Seitenwand unterschiedliche Farben haben.
-
+	
 	glBegin(GL_QUADS);                
 	// Begin drawing the color cube with 6 quads
 	// Define vertices in counter-clockwise (CCW) order
@@ -372,7 +372,7 @@ void display()
 	// *************** read voxel texture for visualization *************
 	// TODO: Texturdaten der Voxelisierungs-Textur auslesen.
 	glBindTexture(GL_TEXTURE_2D, voxelizationTextureId);
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_INT, pixels);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, pixels);
 
 	// **************** draw the voxel model ****************
 	// TODO: Viewport auf Bildschirmauflösung setzen und Backbuffer clearen.
