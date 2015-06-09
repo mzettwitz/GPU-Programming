@@ -10,7 +10,7 @@ void main()
 {	
 	// TODO: Tiefenwert von [0..1] auf {0..127} abbilden.
 	
-	uint value = uint(gl_FragCoord.y * 127.0);
+	uint value = uint(gl_FragCoord.z * 127.0);
 	result = uvec4(0,0,0,1);
 	result << 2^(value);
 	
