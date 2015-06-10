@@ -347,7 +347,8 @@ void display()
 	
 	// DONE: Logik-Operation aktivieren. Anstatt den Farbwert in das Target zu schreiben, 
 	// werden die Komponenten des Pixels als UINTs aufgefasst und mit dem Pixel im FBO mit OR verknüpft ("reingeodert"...)	
-	glLogicOp(GL_OR);
+	glEnable(GL_COLOR_LOGIC_OP);
+	glLogicOp(GL_XOR); // XOR because of the solid voxelization 
 
 	// Projektionsmatrix setzen
 	glMatrixMode(GL_PROJECTION);
@@ -363,7 +364,8 @@ void display()
 	angle += 0.5f;
 
 	// Kanne zeichnen
-	glutSolidTeapot(0.7);
+	//glutSolidTeapot(0.7);
+	glutSolidTorus(0.2, 0.5, 30, 60);
 	
 	// TODO: Rendern in FBO beenden (Backbuffer wieder aktiv) und Fixed-Function Pipeline aktivieren.
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -382,7 +384,7 @@ void display()
 	// DONE: Tiefentest an, Beleuchtung und Logik-Operationen aus.
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_LIGHTING);
-	glLogicOp(GL_CLEAR);
+	glDisable(GL_COLOR_LOGIC_OP);
 	
 	// Perspektivische Projektionsmatrix
 	glMatrixMode(GL_PROJECTION);
