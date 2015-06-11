@@ -349,8 +349,13 @@ void display()
 		
 		glColor3f(1.0f, 1.0f, 1.0f);
 		glVertex3f(float(i), 0.0f, 0.0f);
+		//different visualizations
+		bool logarithm = true;
+		if (logarithm)
+		glVertex3f(float(i), log(hPixels[i] + 1) * 50, 0.0f);
+		else
 		glVertex3f(float(i), hPixels[i] * 50, 0.0f);
-		//glVertex3f(i,i,0);		//for dummy purpose, draws a triangle build from lines
+
 
 	}
 	glEnd();
