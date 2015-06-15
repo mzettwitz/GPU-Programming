@@ -50,8 +50,12 @@ __global__ void swirlKernel( float *sourcePtr, float *targetPtr, float a, float 
 
 	// Transform rotated vector into 1d
 	int index2 = int(x2) + int(y2) * blockDim.x;
+	if (index2 < 0 || index2 > DIM*DIM)
+		targetPtr[index] = sourcePtr[index];
+	else 
+		targetPtr[index] = sourcePtr[index2];
 
-	targetPtr[index] = sourcePtr[index2];    // funny shifts till it collapses
+	    // funny shifts till it collapses
 }
 
 void display(void)	
