@@ -29,14 +29,16 @@ __global__ void swirlKernel( float *sourcePtr, float *targetPtr, float a, float 
     // DONE: Index berechnen	
 	index = threadIdx.x + blockIdx.x * blockDim.x;
 
-	// TODO: Den Swirl invertieren.
+	// DONE: Den Swirl invertieren.
 	// Add variables
 	float r = 0.f;
 	float angle = 0.f;
 
-	// Create a vector: x = centerX - thread(x dim), y = centerY - block(y dim)
-	float x = centerX - threadIdx.x;
-	float y = centerY - blockIdx.x;
+	// Create a vector to get the difference between center and position
+	float x = index % DIM;
+	float y = index / DIM;
+	x = x - centerX;
+	y = y - centerY;
 
 	// Compute radius of actual pixel via length of an vector using CUDA Math
 	// http://docs.nvidia.com/cuda/cuda-math-api/group__CUDA__MATH__SINGLE.html#group__CUDA__MATH__SINGLE
@@ -48,14 +50,19 @@ __global__ void swirlKernel( float *sourcePtr, float *targetPtr, float a, float 
 	float x2 = x * cosf(angle) - y * sinf(angle);
 	float y2 = x * sinf(angle) + y * cosf(angle);
 
+	// Add the center to the rotated vector to obtain the original position after rotation
+	x2 = x2 + centerX;
+	y2 = y2 + centerY;
+
 	// Transform rotated vector into 1d
 	int index2 = int(x2) + int(y2) * blockDim.x;
+
+	// Borders: outside: pass through | inside: set new pixel
 	if (index2 < 0 || index2 > DIM*DIM)
 		targetPtr[index] = sourcePtr[index];
 	else 
 		targetPtr[index] = sourcePtr[index2];
 
-	    // funny shifts till it collapses
 }
 
 void display(void)	
