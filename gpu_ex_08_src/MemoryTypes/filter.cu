@@ -73,24 +73,29 @@ __global__ void boxcar(float* targetDevPtr, float* targetBlurDevPtr, int kernels
 	// blurred grey value
 	float grey = 0.f;
 
-	// borders	
-	for (int i = -kernelsize / 2; i < kernelsize / 2; i++)	// iterate through kernel columns
+	if (kernelsize < 2)
+		targetBlurDevPtr[index] = targetDevPtr[index];
+	else
 	{
-		for (int j = -kernelsize / 2; j < kernelsize / 2; j++)	// iterate through kernel rows
+		// borders	
+		for (int i = -kernelsize / 2; i < kernelsize / 2; i++)	// iterate through kernel columns
 		{
-			if (pixelPos.x + i <= DIM && pixelPos.x - i >= 0
-				&& pixelPos.y + j <= DIM && pixelPos.y + j >= 0)	// zero padding
+			for (int j = -kernelsize / 2; j < kernelsize / 2; j++)	// iterate through kernel rows
 			{
-				// convert into 1d
-				index2 = pixelPos.x + i + (pixelPos.y + j) * blockDim.x;				
+				if (pixelPos.x + i <= DIM && pixelPos.x - i >= 0
+					&& pixelPos.y + j <= DIM && pixelPos.y + j >= 0)	// zero padding
+				{
+					// convert into 1d
+					index2 = pixelPos.x + i + (pixelPos.y + j) * blockDim.x;
 
-				// add partial grey value to the target value
-				grey += (targetDevPtr[index2] / float(kernelsize*kernelsize));
-				
+					// add partial grey value to the target value
+					grey += (targetDevPtr[index2] / float(kernelsize*kernelsize));
+
+				}
 			}
 		}
-	}	
-	targetBlurDevPtr[index] = grey;
+		targetBlurDevPtr[index] = grey;
+	}
 }
 
 void display(void)	
