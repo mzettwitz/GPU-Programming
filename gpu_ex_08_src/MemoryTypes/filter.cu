@@ -44,7 +44,7 @@ __global__ void transform(float* sourceDevPtr, float* targetDevPtr, int a)
 	// translate in diagonal direction (use pixel as vector)
 	int2 pixelPos = { (threadIdx.x + a) % DIM, (blockIdx.x + a) % DIM };
 
-	// boarders
+	// borders
 	if (pixelPos.x > DIM && pixelPos.x < 0)
 		pixelPos.x = 0 ;
 	
@@ -61,41 +61,36 @@ __global__ void transform(float* sourceDevPtr, float* targetDevPtr, int a)
 
 }
 
-// TODO: implement a boxcar filter kernel
+// DONE: implement a boxcar filter kernel
 __global__ void boxcar(float* targetDevPtr, float* targetBlurDevPtr, int kernelsize)
 {
-
 	int index = threadIdx.x + blockIdx.x * blockDim.x;
 	int index2 = index;
-	
-	
+
 	// use pixel as vector
-	int2 pixelPos = { threadIdx.x % DIM, blockIdx.x / DIM };
+	int2 pixelPos = { threadIdx.x, blockIdx.x };
 
 	// blurred grey value
 	float grey = 0.f;
 
-	// borders
-	
+	// borders	
 	for (int i = -kernelsize / 2; i < kernelsize / 2; i++)	// iterate through kernel columns
 	{
 		for (int j = -kernelsize / 2; j < kernelsize / 2; j++)	// iterate through kernel rows
 		{
-			if (pixelPos.x + i < DIM && pixelPos.x - i > 0
-				&& pixelPos.y + j < DIM && pixelPos.y + j > 0)	// zero padding
+			if (pixelPos.x + i <= DIM && pixelPos.x - i >= 0
+				&& pixelPos.y + j <= DIM && pixelPos.y + j >= 0)	// zero padding
 			{
 				// convert into 1d
-				index2 = pixelPos.x + i + pixelPos.y + j * blockDim.x;				
+				index2 = pixelPos.x + i + (pixelPos.y + j) * blockDim.x;				
 
 				// add partial grey value to the target value
 				grey += (targetDevPtr[index2] / float(kernelsize*kernelsize));
 				
 			}
 		}
-	}
-	
+	}	
 	targetBlurDevPtr[index] = grey;
-
 }
 
 void display(void)	
@@ -107,17 +102,27 @@ void display(void)
 	transform <<< DIM, DIM >>>(sourceDevPtr, targetDevPtr, a);
 	a++;
 
+	// DONE: Zeitmessung starten (see cudaEventCreate, cudaEventRecord)
+	cudaEvent_t start, stop;
+	float time;
+	CUDA_SAFE_CALL(cudaEventCreate(&start));
+	CUDA_SAFE_CALL(cudaEventCreate(&stop));
+	CUDA_SAFE_CALL(cudaEventRecord(start, 0));
 
-	// TODO: Zeitmessung starten (see cudaEventCreate, cudaEventRecord)
 
-	// TODO: Kernel mit Blur-Filter ausführen.
-	boxcar << < DIM, DIM >> >(targetDevPtr, targetBlurDevPtr, blurRadius);
+	// DONE: Kernel mit Blur-Filter ausführen.
+	boxcar <<< DIM, DIM >>>(targetDevPtr, targetBlurDevPtr, blurRadius);
 
-	// TODO: Zeitmessung stoppen und fps ausgeben (see cudaEventSynchronize, cudaEventElapsedTime, cudaEventDestroy)
+	// DONE: Zeitmessung stoppen und fps ausgeben (see cudaEventSynchronize, cudaEventElapsedTime, cudaEventDestroy)
+	CUDA_SAFE_CALL(cudaEventRecord(stop, 0));
+	CUDA_SAFE_CALL(cudaEventSynchronize(stop));
+	CUDA_SAFE_CALL(cudaEventElapsedTime(&time, start, stop));
+	CUDA_SAFE_CALL(cudaEventDestroy(start));
+	CUDA_SAFE_CALL(cudaEventDestroy(stop));
+	printf("Elapsed time: %f ms\n", time);
 
 	// Ergebnis zur CPU zuruecklesen
-    CUDA_SAFE_CALL( cudaMemcpy( readBackPixels, targetDevPtr, DIM*DIM*4, cudaMemcpyDeviceToHost ) );
-	
+    //CUDA_SAFE_CALL( cudaMemcpy( readBackPixels, targetDevPtr, DIM*DIM*4, cudaMemcpyDeviceToHost ) ); // task01	
 	CUDA_SAFE_CALL(cudaMemcpy(readBackPixels, targetBlurDevPtr, DIM*DIM * 4, cudaMemcpyDeviceToHost));
 
 	// Ergebnis zeichnen (ja, jetzt gehts direkt wieder zur GPU zurueck...) 
@@ -134,8 +139,6 @@ void cleanup() {
 	CUDA_SAFE_CALL(cudaFree(targetDevPtr));
 	CUDA_SAFE_CALL(cudaFree(targetBlurDevPtr));
 	CUDA_SAFE_CALL(cudaFree(readBackPixels));
-
-
 }
 
 int main(int argc, char **argv)
