@@ -61,36 +61,39 @@ __global__ void transform(float* sourceDevPtr, float* targetDevPtr, int a)
 
 }
 
-// DONE: implement a boxcar filter kernel
+// TODO: implement a boxcar filter kernel
 __global__ void boxcar(float* targetDevPtr, float* targetBlurDevPtr, int kernelsize)
 {
 
 	int index = threadIdx.x + blockIdx.x * blockDim.x;
 	int index2 = index;
-
+	
+	
 	// use pixel as vector
-	int2 pixelPos = { threadIdx.x, blockIdx.x };
+	int2 pixelPos = { threadIdx.x % DIM, blockIdx.x / DIM };
 
-	// blured grey value
+	// blurred grey value
 	float grey = 0.f;
 
 	// borders
+	
 	for (int i = -kernelsize / 2; i < kernelsize / 2; i++)	// iterate through kernel columns
 	{
-		for (int j = -kernelsize / 2; i < kernelsize / 2; j++)	// iterate through kernel rows
+		for (int j = -kernelsize / 2; j < kernelsize / 2; j++)	// iterate through kernel rows
 		{
 			if (pixelPos.x + i < DIM && pixelPos.x - i > 0
 				&& pixelPos.y + j < DIM && pixelPos.y + j > 0)	// zero padding
 			{
 				// convert into 1d
-				index2 = pixelPos.x + i + pixelPos.y + j * blockDim.x;
+				index2 = pixelPos.x + i + pixelPos.y + j * blockDim.x;				
 
 				// add partial grey value to the target value
-				grey += targetDevPtr[index2] / float(kernelsize);
+				grey += (targetDevPtr[index2] / float(kernelsize*kernelsize));
+				
 			}
 		}
 	}
-
+	
 	targetBlurDevPtr[index] = grey;
 
 }
@@ -108,14 +111,14 @@ void display(void)
 	// TODO: Zeitmessung starten (see cudaEventCreate, cudaEventRecord)
 
 	// TODO: Kernel mit Blur-Filter ausführen.
-	//boxcar << < DIM, DIM >> >(targetDevPtr, targetBlurDevPtr, blurRadius);
+	boxcar << < DIM, DIM >> >(targetDevPtr, targetBlurDevPtr, blurRadius);
 
 	// TODO: Zeitmessung stoppen und fps ausgeben (see cudaEventSynchronize, cudaEventElapsedTime, cudaEventDestroy)
 
 	// Ergebnis zur CPU zuruecklesen
     CUDA_SAFE_CALL( cudaMemcpy( readBackPixels, targetDevPtr, DIM*DIM*4, cudaMemcpyDeviceToHost ) );
 	
-	//CUDA_SAFE_CALL(cudaMemcpy(readBackPixels, targetBlurDevPtr, DIM*DIM * 4, cudaMemcpyDeviceToHost));
+	CUDA_SAFE_CALL(cudaMemcpy(readBackPixels, targetBlurDevPtr, DIM*DIM * 4, cudaMemcpyDeviceToHost));
 
 	// Ergebnis zeichnen (ja, jetzt gehts direkt wieder zur GPU zurueck...) 
 	glDrawPixels( DIM, DIM, GL_LUMINANCE, GL_FLOAT, readBackPixels );
