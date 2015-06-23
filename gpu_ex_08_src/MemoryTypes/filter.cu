@@ -21,7 +21,7 @@ float readBackPixels[DIM*DIM];
 int a = 0;
 
 // DONE: declare new texture memory
-//texture<float> tex;
+texture<float> tex;
 
 void keyboard(unsigned char key, int x, int y)
 {
@@ -98,6 +98,47 @@ __global__ void boxcar(float* targetDevPtr, float* targetBlurDevPtr, int kernels
 	}
 }
 
+
+
+// TODO: implement a boxcar filter kernel using texture memory
+__global__ void boxcarTex(float* targetBlurDevPtr, int kernelsize)
+{
+	int index = threadIdx.x + blockIdx.x * blockDim.x;
+	int index2 = index;
+	int index3 = threadIdx.y * blockDim.x + threadIdx.x; // idx of thread in a block
+
+	// use pixel as vector
+	int2 pixelPos = { threadIdx.x, blockIdx.x };
+
+	// blurred grey value as shared memory for each thread
+	__shared__ float grey [DIM];
+	
+	if (kernelsize < 2)
+		targetBlurDevPtr[index] = tex1Dfetch(tex, index2);
+	else
+	{
+		// borders	
+		for (int i = -kernelsize / 2; i < kernelsize / 2; i++)	// iterate through kernel columns
+		{
+			for (int j = -kernelsize / 2; j < kernelsize / 2; j++)	// iterate through kernel rows
+			{
+				if (pixelPos.x + i <= DIM && pixelPos.x - i >= 0
+					&& pixelPos.y + j <= DIM && pixelPos.y + j >= 0)	// zero padding
+				{
+					// convert into 1d
+					index2 = pixelPos.x + i + (pixelPos.y + j) * blockDim.x;
+
+					// add partial grey value to the target value
+					grey[index3] += (tex1Dfetch(tex, index2) / float(kernelsize*kernelsize));
+
+				}
+			}
+		}
+		targetBlurDevPtr[index] = grey[index3];
+	}
+}
+
+
 void display(void)	
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -116,7 +157,8 @@ void display(void)
 
 
 	// DONE: Kernel mit Blur-Filter ausführen.
-	boxcar <<< DIM, DIM >>>(targetDevPtr, targetBlurDevPtr, blurRadius);
+	//boxcar <<< DIM, DIM >>>(targetDevPtr, targetBlurDevPtr, blurRadius);
+	boxcarTex <<< DIM, DIM >>>(targetBlurDevPtr, blurRadius);
 
 	// DONE: Zeitmessung stoppen und fps ausgeben (see cudaEventSynchronize, cudaEventElapsedTime, cudaEventDestroy)
 	CUDA_SAFE_CALL(cudaEventRecord(stop, 0));
@@ -140,7 +182,7 @@ void cleanup() {
     CUDA_SAFE_CALL( cudaFree( sourceDevPtr ) );     
 
 	// TODO: Aufräumen zusätzlich angelegter Ressourcen.
-	//CUDA_SAFE_CALL(cudaUnbindTexture(tex));
+	CUDA_SAFE_CALL(cudaUnbindTexture(tex));
 	CUDA_SAFE_CALL(cudaFree(targetDevPtr));
 	CUDA_SAFE_CALL(cudaFree(targetBlurDevPtr));
 	CUDA_SAFE_CALL(cudaFree(readBackPixels));
@@ -180,8 +222,9 @@ int main(int argc, char **argv)
 
 	// DONE: Binding des Speichers des Bildes an eine Textur mittels cudaBindTexture.
 	//cudaBindTexture( NULL, texName, devPtr, imageSize );
-	//CUDA_SAFE_CALL(cudaBindTexture(NULL, tex, sourceDevPtr, sizeof(sourceDevPtr)));
+	CUDA_SAFE_CALL(cudaBindTexture(NULL, tex, targetDevPtr, sizeof(targetDevPtr)));
 
+	
 
 	glutMainLoop();
 
