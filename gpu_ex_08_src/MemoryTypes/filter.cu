@@ -78,12 +78,12 @@ __global__ void boxcar(float* targetDevPtr, float* targetBlurDevPtr, int kernels
 	else
 	{
 		// borders	
-		for (int i = -kernelsize / 2; i < kernelsize / 2; i++)	// iterate through kernel columns
+		for (int i = -(kernelsize + 1) / 2; i <(kernelsize + 1) / 2; i++)	// iterate through kernel columns
 		{
-			for (int j = -kernelsize / 2; j < kernelsize / 2; j++)	// iterate through kernel rows
+			for (int j = -(kernelsize + 1) / 2; j <(kernelsize + 1 )/ 2; j++)	// iterate through kernel rows
 			{
 				if (pixelPos.x + i <= DIM && pixelPos.x - i >= 0
-					&& pixelPos.y + j <= DIM && pixelPos.y + j >= 0)	// zero padding
+					&& pixelPos.y + j <= DIM && pixelPos.y - j >= 0)	// zero padding
 				{
 					// convert into 1d
 					index2 = pixelPos.x + i + (pixelPos.y + j) * blockDim.x;
@@ -105,36 +105,35 @@ __global__ void boxcarTex(float* targetBlurDevPtr, int kernelsize)
 {
 	int index = threadIdx.x + blockIdx.x * blockDim.x;
 	int index2 = index;
-	int index3 = threadIdx.y * blockDim.x + threadIdx.x; // idx of thread in a block
 
 	// use pixel as vector
 	int2 pixelPos = { threadIdx.x, blockIdx.x };
 
-	// blurred grey value as shared memory for each thread
-	__shared__ float grey [DIM];
-	
+	// blurred grey value
+	float grey = 0.f;
+
 	if (kernelsize < 2)
 		targetBlurDevPtr[index] = tex1Dfetch(tex, index2);
 	else
 	{
 		// borders	
-		for (int i = -kernelsize / 2; i < kernelsize / 2; i++)	// iterate through kernel columns
+		for (int i = -(kernelsize + 1) / 2; i <(kernelsize + 1) / 2; i++)	// iterate through kernel columns
 		{
-			for (int j = -kernelsize / 2; j < kernelsize / 2; j++)	// iterate through kernel rows
+			for (int j = -(kernelsize + 1) / 2; j <(kernelsize + 1) / 2; j++)	// iterate through kernel rows
 			{
 				if (pixelPos.x + i <= DIM && pixelPos.x - i >= 0
-					&& pixelPos.y + j <= DIM && pixelPos.y + j >= 0)	// zero padding
+					&& pixelPos.y + j <= DIM && pixelPos.y - j >= 0)	// zero padding
 				{
 					// convert into 1d
 					index2 = pixelPos.x + i + (pixelPos.y + j) * blockDim.x;
 
 					// add partial grey value to the target value
-					grey[index3] += (tex1Dfetch(tex, index2) / float(kernelsize*kernelsize));
+					grey += (tex1Dfetch(tex, index2) / float(kernelsize*kernelsize));
 
 				}
 			}
 		}
-		targetBlurDevPtr[index] = grey[index3];
+		targetBlurDevPtr[index] = grey;
 	}
 }
 
@@ -157,8 +156,8 @@ void display(void)
 
 
 	// DONE: Kernel mit Blur-Filter ausführen.
-	//boxcar <<< DIM, DIM >>>(targetDevPtr, targetBlurDevPtr, blurRadius);
-	boxcarTex <<< DIM, DIM >>>(targetBlurDevPtr, blurRadius);
+	//boxcar <<< DIM, DIM >>>(targetDevPtr, targetBlurDevPtr, 55);
+	boxcarTex << < DIM, DIM >> >(targetBlurDevPtr, 55);
 
 	// DONE: Zeitmessung stoppen und fps ausgeben (see cudaEventSynchronize, cudaEventElapsedTime, cudaEventDestroy)
 	CUDA_SAFE_CALL(cudaEventRecord(stop, 0));
@@ -221,8 +220,8 @@ int main(int argc, char **argv)
 	CUDA_SAFE_CALL(cudaMalloc((void**)&targetBlurDevPtr, DIM*DIM*4));
 
 	// DONE: Binding des Speichers des Bildes an eine Textur mittels cudaBindTexture.
-	//cudaBindTexture( NULL, texName, devPtr, imageSize );
-	CUDA_SAFE_CALL(cudaBindTexture(NULL, tex, targetDevPtr, sizeof(targetDevPtr)));
+	//cudaBindTexture( NULL, texName, devPtr, imageSize ); // use direct size, not sizeof()!!!
+	CUDA_SAFE_CALL(cudaBindTexture(NULL, tex, targetDevPtr, DIM*DIM*4));
 
 	
 
