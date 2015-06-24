@@ -17,6 +17,9 @@ float *targetBlurDevPtr;
 
 float readBackPixels[DIM*DIM];
 
+// variable to setup the memory type (kernal call)
+short memory = 0;
+
 // DONE: time addicted variable
 int a = 0;
 
@@ -30,6 +33,10 @@ void keyboard(unsigned char key, int x, int y)
 	case 27:
 		exit(0);
 		break;
+	case 'q':
+		memory++;
+		memory %= 2;
+
 	}
 	glutPostRedisplay();
 }
@@ -138,13 +145,13 @@ __global__ void boxcarTex(float* targetBlurDevPtr, int kernelsize)
 }
 
 
-void display(void)	
+void display(void)
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// DONE: Transformationskernel auf sourceDevPtr anwenden
-	transform <<< DIM, DIM >>>(sourceDevPtr, targetDevPtr, a);
+	transform << < DIM, DIM >> >(sourceDevPtr, targetDevPtr, a);
 	a++;
 
 	// DONE: Zeitmessung starten (see cudaEventCreate, cudaEventRecord)
@@ -156,16 +163,39 @@ void display(void)
 
 
 	// DONE: Kernel mit Blur-Filter ausführen.
-	//boxcar <<< DIM, DIM >>>(targetDevPtr, targetBlurDevPtr, 55);
-	boxcarTex << < DIM, DIM >> >(targetBlurDevPtr, 55);
-
+	switch (memory)
+	{
+	case 0:
+		boxcar << < DIM, DIM >> >(targetDevPtr, targetBlurDevPtr, 55);
+		break;
+	case 1:
+		boxcarTex << < DIM, DIM >> >(targetBlurDevPtr, 55);
+		break;
+	case 2:
+		//dummy for shared
+		break;
+	}
+	
 	// DONE: Zeitmessung stoppen und fps ausgeben (see cudaEventSynchronize, cudaEventElapsedTime, cudaEventDestroy)
 	CUDA_SAFE_CALL(cudaEventRecord(stop, 0));
 	CUDA_SAFE_CALL(cudaEventSynchronize(stop));
 	CUDA_SAFE_CALL(cudaEventElapsedTime(&time, start, stop));
 	CUDA_SAFE_CALL(cudaEventDestroy(start));
 	CUDA_SAFE_CALL(cudaEventDestroy(stop));
-	printf("Elapsed time: %f ms\n", time);
+
+	switch (memory)
+	{
+	case 0:
+		printf("Elapsed time: %f ms using global memory\n", time);
+		break;	
+	case 1:
+		printf("Elapsed time: %f ms using texture memory\n", time);
+		break;
+	case 2:
+		printf("Elapsed time: %f ms using shared memory\n", time);
+		break;
+	}
+
 
 	// Ergebnis zur CPU zuruecklesen
     //CUDA_SAFE_CALL( cudaMemcpy( readBackPixels, targetDevPtr, DIM*DIM*4, cudaMemcpyDeviceToHost ) ); // task01	
