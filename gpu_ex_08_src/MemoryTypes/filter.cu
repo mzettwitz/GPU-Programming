@@ -6,10 +6,8 @@
 
 
 #define DIM 512
-#define BLOCKDIM 32
-#define KERNELSIZE 10
 #define blockSize 8
-#define blurRadius 10
+#define blurRadius 8
 #define effectiveBlockSize (blockSize+2*blurRadius)
 
 float sourceColors[DIM*DIM];
@@ -100,11 +98,12 @@ __global__ void boxcar(float* targetDevPtr, float* targetBlurDevPtr, int kernels
 					index2 = pixelPos.x + i + (pixelPos.y + j) * blockDim.x;
 
 					// add partial grey value to the target value
-					grey += (targetDevPtr[index2] / float(kernelsize*kernelsize));
+					grey += (targetDevPtr[index2]);
 
 				}
 			}
 		}
+		grey /=  float(kernelsize*kernelsize);
 		targetBlurDevPtr[index] = grey;
 	}
 }
@@ -139,11 +138,12 @@ __global__ void boxcarTex(float* targetBlurDevPtr, int kernelsize)
 					index2 = pixelPos.x + i + (pixelPos.y + j) * blockDim.x;
 
 					// add partial grey value to the target value
-					grey += (tex1Dfetch(tex, index2) / float(kernelsize*kernelsize));
+					grey += (tex1Dfetch(tex, index2));
 
 				}
 			}
 		}
+		grey /= float(kernelsize*kernelsize);
 		targetBlurDevPtr[index] = grey;
 	}
 }
@@ -184,12 +184,20 @@ __global__ void boxcarShared(float* targetDevPtr, float* targetBlurDevPtr)
 
 }
 
+
+/*
 __global__ void boxcarShared2(float* targetDevPtr, float* targetBlurDevPtr)
 {
+	
+	
+	
+	
+
 	__shared__ float cache[effectiveBlockSize*effectiveBlockSize];
 
 	int pixelX = threadIdx.x + blockIdx.x * blockSize - blurRadius;
 	int pixelY = threadIdx.y + blockIdx.y * blockSize - blurRadius;
+	
 
 	pixelX = max(min(pixelX, DIM - 1), 0);
 	pixelY = max(min(pixelY, DIM - 1), 0);
@@ -198,11 +206,16 @@ __global__ void boxcarShared2(float* targetDevPtr, float* targetBlurDevPtr)
 	int pixelPos = pixelX + +pixelY * DIM;
 
 	cache[cacheIndex] = targetDevPtr[pixelPos];
-
+	if (threadIdx.x == 0 && blockIdx.x == 0 && threadIdx.y == 0 && blockIdx.y == 0)
+		printf(threadIdx.x + "");
+		
 	__syncthreads();
 
 	float outputPixel = 0.0f;
-	if (threadIdx.x > blurRadius && threadIdx.x < effectiveBlockSize - blurRadius && threadIdx.y > blurRadius && threadIdx.y < effectiveBlockSize - blurRadius)
+	if (threadIdx.x >= blurRadius && 
+		threadIdx.x <= effectiveBlockSize - blurRadius &&
+		threadIdx.y >= blurRadius && 
+		threadIdx.y <= effectiveBlockSize - blurRadius)
 	{
 		for (int i = -blurRadius; i <= blurRadius; ++i)
 		{
@@ -214,6 +227,61 @@ __global__ void boxcarShared2(float* targetDevPtr, float* targetBlurDevPtr)
 	}
 
 	targetBlurDevPtr[pixelPos] = outputPixel / (blurRadius*blurRadius);
+
+	
+}
+
+*/
+
+
+__global__ void boxcarShared3(float* source, float* target)
+{
+	__shared__ float cache[effectiveBlockSize * effectiveBlockSize];
+
+	int pixelX = threadIdx.x + blockIdx.x * blockSize - blurRadius;
+	int pixelY = threadIdx.y + blockIdx.y * blockSize - blurRadius;
+
+	int cacheIndexX = threadIdx.x;
+	int cacheIndexY = threadIdx.y;
+
+	int cacheIndex = threadIdx.x + threadIdx.y * effectiveBlockSize;
+
+	//borders
+	if (0 <= pixelX < DIM && 0 <= pixelY < DIM)
+	{
+		cache[cacheIndex] = source[pixelX + pixelY * DIM];
+	}
+
+	__syncthreads();
+
+	float blurredValue = 0;
+	int tempX;
+	int tempY;
+
+	//Borders
+	if (blurRadius <= cacheIndexX &&
+		blurRadius <= cacheIndexY  &&
+		cacheIndexX <= effectiveBlockSize - blurRadius &&
+		cacheIndexY <= effectiveBlockSize - blurRadius &&
+		pixelX < DIM &&
+		pixelY < DIM)
+	{
+
+		for (int i = -blurRadius; i<blurRadius; ++i)
+		{
+			for (int j = -blurRadius; j<blurRadius; ++j)
+			{
+				tempX = i + cacheIndexX;
+				tempY = j + cacheIndexY;
+				blurredValue += cache[tempX + tempY * effectiveBlockSize];
+			}
+		}
+
+		blurredValue = blurredValue / (blurRadius*blurRadius);
+		target[pixelX + pixelY * DIM] = blurredValue;
+
+	}
+
 }
 void display(void)
 {
@@ -244,7 +312,7 @@ void display(void)
 		boxcarTex << < DIM, DIM >> >(targetBlurDevPtr, kernelsize);
 		break;
 	case 2:
-		boxcarShared2 << <gridDim, blockDim >> >(targetDevPtr, targetBlurDevPtr);
+		boxcarShared3 << <gridDim, blockDim >> >(targetDevPtr, targetBlurDevPtr);
 		break;
 	}
 
