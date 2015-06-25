@@ -20,6 +20,8 @@ float readBackPixels[DIM*DIM];
 // DONE: time addicted variable
 int a = 0;
 
+int kernelsize = 10;
+
 // DONE: declare new texture memory
 texture<float> tex;
 
@@ -29,6 +31,12 @@ void keyboard(unsigned char key, int x, int y)
 	{
 	case 27:
 		exit(0);
+		break;
+	case 43:
+		kernelsize++;
+		break;
+	case 45:
+		kernelsize--;
 		break;
 	}
 	glutPostRedisplay();
@@ -137,6 +145,46 @@ __global__ void boxcarTex(float* targetBlurDevPtr, int kernelsize)
 	}
 }
 
+__global__ void boxcarShared(float* targetDevPtr, float* targetBlurDevPtr, int kernelsize)
+{
+	//declare variable for shared memory
+	
+	__shared__ float cache[DIM];
+
+	int tidX = threadIdx.x + blockIdx.x * blockDim.x;
+	int tidY = threadIdx.y + blockIdx.y * blockDim.y;
+	int tid = tidX + tidY * blockDim.x * gridDim.x;
+
+	int cacheIndex = threadIdx.x;
+
+	//copy data to shared memory
+	cache[cacheIndex] = targetDevPtr[tid];
+
+	/*if (threadIdx.x > kernelsize / 2 && threadIdx.x < size - kernelsize / 2 && threadIdx.y > kernelsize / 2 && threadIdx.y < size - kernelsize / 2)
+	{
+	
+	// borders	
+		for (int i = -(kernelsize + 1) / 2; i < (kernelsize + 1) / 2; i++)	// iterate through kernel columns
+		{
+			for (int j = -(kernelsize + 1) / 2; j < (kernelsize + 1) / 2; j++)	// iterate through kernel rows
+			{
+				if (pixelPos.x + i <= DIM && pixelPos.x - i >= 0
+					&& pixelPos.y + j <= DIM && pixelPos.y - j >= 0)	// zero padding
+				{
+					// convert into 1d
+					tid2 = pixelPos.x + i + (pixelPos.y + j);
+
+					// add partial grey value to the target value
+					grey += (cache[tid2] / float(kernelsize*kernelsize));
+
+				}
+			}
+		}
+
+	}*/
+
+	targetBlurDevPtr[tid] = cache[cacheIndex];		
+}
 
 void display(void)	
 {
@@ -154,10 +202,16 @@ void display(void)
 	CUDA_SAFE_CALL(cudaEventCreate(&stop));
 	CUDA_SAFE_CALL(cudaEventRecord(start, 0));
 
+	cudaDeviceProp prop;
+	cudaGetDeviceProperties(&prop, 0);
+	float maxThreadsPerBlock = prop.maxThreadsPerBlock;
 
 	// DONE: Kernel mit Blur-Filter ausführen.
-	//boxcar <<< DIM, DIM >>>(targetDevPtr, targetBlurDevPtr, 55);
-	boxcarTex << < DIM, DIM >> >(targetBlurDevPtr, 55);
+	//boxcar <<< DIM, DIM >>>(targetDevPtr, targetBlurDevPtr, kernelsize);
+	//boxcarTex <<< DIM, DIM >> >(targetBlurDevPtr, kernelsize);
+	boxcarShared <<<DIM,DIM>>>(targetDevPtr, targetBlurDevPtr,kernelsize);
+
+
 
 	// DONE: Zeitmessung stoppen und fps ausgeben (see cudaEventSynchronize, cudaEventElapsedTime, cudaEventDestroy)
 	CUDA_SAFE_CALL(cudaEventRecord(stop, 0));
@@ -166,6 +220,7 @@ void display(void)
 	CUDA_SAFE_CALL(cudaEventDestroy(start));
 	CUDA_SAFE_CALL(cudaEventDestroy(stop));
 	printf("Elapsed time: %f ms\n", time);
+	printf("Kernelsize: %u\n\n", kernelsize);
 
 	// Ergebnis zur CPU zuruecklesen
     //CUDA_SAFE_CALL( cudaMemcpy( readBackPixels, targetDevPtr, DIM*DIM*4, cudaMemcpyDeviceToHost ) ); // task01	
@@ -175,7 +230,6 @@ void display(void)
 	glDrawPixels( DIM, DIM, GL_LUMINANCE, GL_FLOAT, readBackPixels );
 	glutSwapBuffers();
 }
-
 // clean up memory allocated on the GPU
 void cleanup() {
     CUDA_SAFE_CALL( cudaFree( sourceDevPtr ) );     
@@ -224,7 +278,7 @@ int main(int argc, char **argv)
 	CUDA_SAFE_CALL(cudaBindTexture(NULL, tex, targetDevPtr, DIM*DIM*4));
 
 	
-
+	glutKeyboardFunc(keyboard);
 	glutMainLoop();
 
 	cleanup();
