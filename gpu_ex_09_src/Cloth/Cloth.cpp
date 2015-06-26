@@ -12,6 +12,7 @@ void updateCloth(float3* newPos, float3* oldPos, float3* impacts, float3* veloci
 	float deltaTime, float stepsize);
 
 unsigned int memSize = sizeof(float)* 3 * RESOLUTION_X*RESOLUTION_Y;
+unsigned int memSize2 = sizeof(float);
 
 
 ClothSim::ClothSim() : ping(0)
@@ -102,7 +103,7 @@ void ClothSim::update(GLfloat deltaTime)
 	cudaGraphicsResourceGetMappedPointer((void**)newPos, &memSize, cudaPos[1 - ping]);
 
 	// DONE: Pointer auf die Daten von cudaNormal beschaffen.
-	cudaGraphicsResourceGetMappedPointer((void**)normals, &memSize, cudaNormal);
+	cudaGraphicsResourceGetMappedPointer((void**)normals, &memSize2, cudaNormal);
 
 	// Launch update
 	float stepSize = 0.5f; // steers how quickly the iterative refinement converges	
