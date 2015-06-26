@@ -6,8 +6,8 @@
 
 
 #define DIM 512
-#define blockSize 8
-#define blurRadius 8
+#define blockSize 16
+#define blurRadius 6
 #define effectiveBlockSize (blockSize+2*blurRadius)
 
 float sourceColors[DIM*DIM];
@@ -18,7 +18,7 @@ float *targetBlurDevPtr;
 float readBackPixels[DIM*DIM];
 
 // variable to setup the memory type (kernal call)
-short memory = 2;
+short memory = 0;
 
 // DONE: time addicted variable
 int a = 0;
@@ -108,8 +108,6 @@ __global__ void boxcar(float* targetDevPtr, float* targetBlurDevPtr, int kernels
 	}
 }
 
-
-
 // TODO: implement a boxcar filter kernel using texture memory
 __global__ void boxcarTex(float* targetBlurDevPtr, int kernelsize)
 {
@@ -127,10 +125,11 @@ __global__ void boxcarTex(float* targetBlurDevPtr, int kernelsize)
 	else
 	{
 		// borders	
-		for (int i = -(kernelsize + 1) / 2; i <(kernelsize + 1) / 2; i++)	// iterate through kernel columns
+		for (int j = -(kernelsize + 1) / 2; j <(kernelsize + 1) / 2; j++)	// iterate through kernel rows
 		{
-			for (int j = -(kernelsize + 1) / 2; j <(kernelsize + 1) / 2; j++)	// iterate through kernel rows
+			for (int i = -(kernelsize + 1) / 2; i <(kernelsize + 1) / 2; i++)	// iterate through kernel columns
 			{
+
 				if (pixelPos.x + i <= DIM && pixelPos.x - i >= 0
 					&& pixelPos.y + j <= DIM && pixelPos.y - j >= 0)	// zero padding
 				{
@@ -241,28 +240,25 @@ __global__ void boxcarShared3(float* source, float* target)
 	int pixelX = threadIdx.x + blockIdx.x * blockSize - blurRadius;
 	int pixelY = threadIdx.y + blockIdx.y * blockSize - blurRadius;
 
-	int cacheIndexX = threadIdx.x;
-	int cacheIndexY = threadIdx.y;
-
 	int cacheIndex = threadIdx.x + threadIdx.y * effectiveBlockSize;
 
-	//borders
-	if (0 <= pixelX < DIM && 0 <= pixelY < DIM)
+	// Borders
+	if (0 <= pixelX && pixelX < DIM && 0 <= pixelY && pixelY < DIM)
 	{
 		cache[cacheIndex] = source[pixelX + pixelY * DIM];
 	}
-
+	else
+	{
+		cache[cacheIndex] = 0.f;
+	}
 	__syncthreads();
 
-	float blurredValue = 0;
-	int tempX;
-	int tempY;
-
-	//Borders
-	if (blurRadius <= cacheIndexX &&
-		blurRadius <= cacheIndexY  &&
-		cacheIndexX <= effectiveBlockSize - blurRadius &&
-		cacheIndexY <= effectiveBlockSize - blurRadius &&
+	float blurredValue = 0.0f;
+	// Block borders
+	if (blurRadius <= threadIdx.x &&
+		blurRadius <= threadIdx.y &&
+		threadIdx.x <= effectiveBlockSize - blurRadius &&
+		threadIdx.y <= effectiveBlockSize - blurRadius &&
 		pixelX < DIM &&
 		pixelY < DIM)
 	{
@@ -270,17 +266,19 @@ __global__ void boxcarShared3(float* source, float* target)
 		for (int i = -blurRadius; i<blurRadius; ++i)
 		{
 			for (int j = -blurRadius; j<blurRadius; ++j)
-			{
-				tempX = i + cacheIndexX;
-				tempY = j + cacheIndexY;
-				blurredValue += cache[tempX + tempY * effectiveBlockSize];
+			{				 
+				blurredValue += cache[i + threadIdx.x + (j + threadIdx.y) * effectiveBlockSize];
 			}
 		}
 
-		blurredValue = blurredValue / (blurRadius*blurRadius);
-		target[pixelX + pixelY * DIM] = blurredValue;
 
+
+
+			blurredValue /= float((blurRadius + 1)*(2.7f)*(blurRadius + 1));
+			target[pixelX + pixelY * DIM] = blurredValue;		
 	}
+	
+
 
 }
 void display(void)
@@ -299,7 +297,7 @@ void display(void)
 	CUDA_SAFE_CALL(cudaEventCreate(&stop));
 	CUDA_SAFE_CALL(cudaEventRecord(start, 0));
 
-	int kernelsize = 10;
+	int kernelsize = 12;
 	dim3 blockDim(effectiveBlockSize, effectiveBlockSize);
 	dim3 gridDim(DIM / blockSize, DIM / blockSize);
 	// DONE: Kernel mit Blur-Filter ausführen.
