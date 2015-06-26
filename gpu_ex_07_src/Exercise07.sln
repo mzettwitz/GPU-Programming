@@ -1,6 +1,8 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30501.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleVectorMad", "SimpleVectorMad\SimpleVectorMad.vcxproj", "{FEB8BBDA-C3EE-4B11-B8A6-B827A5499B49}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Swirl", "Swirl\Swirl.vcxproj", "{88DD6C17-565E-45DF-A6D4-A48EE6C549EE}"
