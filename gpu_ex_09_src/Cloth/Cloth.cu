@@ -18,7 +18,6 @@ __device__ float3 computeImpact(float3 me, float3 other, float stepsize, float h
 __device__ float3 sphereCollision(float3 p, float h)
 {
 	// TODO: Testen, ob Punkt im inneren der Kugel ist. Wenn ja, dann eine Kraft berechnen, die sie wieder heraus bewegt.
-	return p;
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -27,14 +26,43 @@ __device__ float3 sphereCollision(float3 p, float h)
 __global__ void computeImpacts(float3* oldPos, float3* impacts, float stepsize, float h)
 {
 	// TODO: Positionen der benachbarten Gitterpunkte und des eigenen Gitterpunktes ablesen.
-	
+
+	/////// Do we have information about neighboors above and under our position?
+	/////// If yes - do we have to access them using blockIdx.y? 
+	/////// Blocks are Streaming Multiprocessors, right? So we are hardly limited by using no threads?
+	/*
+	float3 pos = oldPos[blockIdx.x];
+	if (blockIdx.x - 1 >= 0)
+	{
+		float3 posLeft = oldPos[blockIdx.x - 1];
+		impacts[blockIdx.x] += computeImpact << <1, 1 >> > (pos, posLeft, stepsize, h);
+	}
+	if (blockId.x + 1 < gridDim.x)
+	{
+		float3 posRight = oldPos[blockIdx.x + 1];
+		impacts[blockIdx.x] += computeImpact << <1, 1 >> > (pos, posRight, stepsize, h);
+	}
+	if (blockIdx.y - 1 >= 0)
+	{
+		float3 posTop = oldPos[blockIdx.y - 1];
+		impacts[blockIdx.x] += computeImpact << <1, 1 >> > (pos, posTop, stepsize, h);
+	}
+	if (blockIdx.x + 1 < gridDim.y)
+	{
+		float3 posBottom = oldPos[blockIdx.y + 1];
+		impacts[blockIdx.x] += computeImpact << <1, 1 >> > (pos, posBottom, stepsize, h);
+	}
+	*/
 	// TODO: Kollisionsbehandlung mit Kugel durchführen.
+
 
 	// TODO: Mit jedem Nachbar besteht ein Constraint. Dementsprechend für jeden Nachbar 
 	//		 computeImpact aufrufen und die Ergebnisse aufsummieren.
+		// see above
+	
 
 	// TODO: Die Summe der Kräfte auf "impacts" des eigenen Gitterpunkts addieren.	
-}
+}	
 
 // -----------------------------------------------------------------------------------------------
 // Preview-Step
@@ -43,6 +71,10 @@ __global__ void previewSteps(	float3* newPos, float3* oldPos, float3* impacts, f
 {
 	// TODO: Berechnen, wo wir wären, wenn wir eine Integration von der bisherigen Position 
 	//		 mit der bisherigen Geschwindigkeit und den neuen Impulsen durchführen.
+	int index = blockIdx.x ; // right access?
+	newPos[index] = oldPos[index] + (velocity[index] + impacts[index] - make_float3(0, GRAVITY, 0) * h) * h;
+	//don't know whether operators are overloaded
+
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -50,6 +82,8 @@ __global__ void previewSteps(	float3* newPos, float3* oldPos, float3* impacts, f
 __global__ void integrateVelocity(	float3* impacts, float3* velocity, float h)
 {
 	// TODO: Update velocity.
+	int index = blockIdx.x; //right access?
+	velocity[index] = velocity[index] * LINEAR_DAMPING + (impacts[index] - make_float3(0, GRAVITY, 0)) * h;
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -64,6 +98,7 @@ void updateCloth(	float3* newPos, float3* oldPos, float3* impacts, float3* veloc
 					float h, float stepsize)
 {
 	dim3 blocks(RESOLUTION_X, RESOLUTION_Y-1, 1);
+	dim3 blocks2(RESOLUTION_X, RESOLUTION_Y - 2, 1);
 
 	// -----------------------------
 	// Clear impacts
@@ -75,11 +110,13 @@ void updateCloth(	float3* newPos, float3* oldPos, float3* impacts, float3* veloc
 	{
 		// -----------------------------
 		// TODO: previewSteps Kernel aufrufen (Vorhersagen, wo die Gitterpunkte mit den aktuellen Impulsen landen würden.)
-		// newpos = oldpos + (velocity + impacts * h) * h		
+		// newpos = oldpos + (velocity + impacts * h) * h
+		previewSteps << <blocks2, 1 >> > (newPos, oldPos, impacts, velocity, h);
 		
 		// -----------------------------
 		// TODO: computeImpacts Kernel aufrufen (Die Impulse neu berechnen, sodass die Constraints besser eingehalten werden.)
 		// impacts += ...
+
 	}
 
 	// -----------------------------
@@ -88,4 +125,5 @@ void updateCloth(	float3* newPos, float3* oldPos, float3* impacts, float3* veloc
 	// -----------------------------
 	// TODO: Integrate velocity kernel ausführen
 	// Der kernel berechnet:  velocity = velocity * LINEAR_DAMPING + (impacts - (0,GRAVITY,0)) * h 	
+	integrateVelocity << <blocks, 1 >> > (impacts, velocity, h);
 }
