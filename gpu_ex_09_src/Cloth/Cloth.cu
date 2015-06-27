@@ -27,30 +27,30 @@ __global__ void computeImpacts(float3* oldPos, float3* impacts, float stepsize, 
 {
 	// TODO: Positionen der benachbarten Gitterpunkte und des eigenen Gitterpunktes ablesen.
 
-	/////// Do we have information about neighboors above and under our position?
-	/////// If yes - do we have to access them using blockIdx.y? 
 	/////// Blocks are Streaming Multiprocessors, right? So we are hardly limited by using no threads?
 	/*
-	float3 pos = oldPos[blockIdx.x];
-	if (blockIdx.x - 1 >= 0)
+	int dim = blockDim.x * gridDim.y;
+	int offset = blockIdx.x * blockDim.x + blockIdx.y * blockDim.y * dim;
+	float3 pos = oldPos[offset];
+	if (offest - 1 >= 0)
 	{
-		float3 posLeft = oldPos[blockIdx.x - 1];
-		impacts[blockIdx.x] += computeImpact << <1, 1 >> > (pos, posLeft, stepsize, h);
+		float3 posLeft = oldPos[offset - 1];
+		impacts[offset] += computeImpact << <1, 1 >> > (pos, posLeft, stepsize, h);
 	}
-	if (blockId.x + 1 < gridDim.x)
+	if (offset + 1 < gridDim.x)
 	{
-		float3 posRight = oldPos[blockIdx.x + 1];
-		impacts[blockIdx.x] += computeImpact << <1, 1 >> > (pos, posRight, stepsize, h);
+		float3 posRight = oldPos[offset + 1];
+		impacts[offset] += computeImpact << <1, 1 >> > (pos, posRight, stepsize, h);
 	}
-	if (blockIdx.y - 1 >= 0)
+	if (offset - dim >= 0)
 	{
-		float3 posTop = oldPos[blockIdx.y - 1];
-		impacts[blockIdx.x] += computeImpact << <1, 1 >> > (pos, posTop, stepsize, h);
+		float3 posTop = oldPos[offset - dim];
+		impacts[offset] += computeImpact << <1, 1 >> > (pos, posTop, stepsize, h);
 	}
-	if (blockIdx.x + 1 < gridDim.y)
+	if (offset + dim < gridDim.y)
 	{
-		float3 posBottom = oldPos[blockIdx.y + 1];
-		impacts[blockIdx.x] += computeImpact << <1, 1 >> > (pos, posBottom, stepsize, h);
+		float3 posBottom = oldPos[offset + dim];
+		impacts[offset] += computeImpact << <1, 1 >> > (pos, posBottom, stepsize, h);
 	}
 	*/
 	// TODO: Kollisionsbehandlung mit Kugel durchführen.
@@ -71,9 +71,9 @@ __global__ void previewSteps(	float3* newPos, float3* oldPos, float3* impacts, f
 {
 	// TODO: Berechnen, wo wir wären, wenn wir eine Integration von der bisherigen Position 
 	//		 mit der bisherigen Geschwindigkeit und den neuen Impulsen durchführen.
-	int index = blockIdx.x ; // right access?
+	int dim = blockDim.x * gridDim.y;
+	int index = blockIdx.x * blockDim.x + blockIdx.y * blockDim.y * dim;
 	newPos[index] = oldPos[index] + (velocity[index] + impacts[index] - make_float3(0, GRAVITY, 0) * h) * h;
-	//don't know whether operators are overloaded
 
 }
 
@@ -82,7 +82,8 @@ __global__ void previewSteps(	float3* newPos, float3* oldPos, float3* impacts, f
 __global__ void integrateVelocity(	float3* impacts, float3* velocity, float h)
 {
 	// TODO: Update velocity.
-	int index = blockIdx.x; //right access?
+	int dim = blockDim.x * gridDim.y;
+	int index = blockIdx.x * blockDim.x + blockIdx.y * blockDim.y * dim;
 	velocity[index] = velocity[index] * LINEAR_DAMPING + (impacts[index] - make_float3(0, GRAVITY, 0)) * h;
 }
 
