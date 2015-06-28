@@ -17,17 +17,28 @@ __device__ float3 computeImpact(float3 me, float3 other, float stepsize, float h
 // Simple collision detection against a sphere at (0,0,0) with radius SPHERE_RADIUS and skin width SKIN_WIDTH.
 __device__ float3 sphereCollision(float3 p, float h)
 {
-	// Do we need 'h' (integration stepsize)?
 	// DONE: Testen, ob Punkt im inneren der Kugel ist. Wenn ja, dann eine Kraft berechnen, die sie wieder heraus bewegt.
-	float3 pos = 0.f;
-	pos = norm3df((p.x + SKIN_WIDTH / 2), (p.y + SKIN_WIDTH / 2), (p.z + SKIN_WIDTH / 2)); 
-
+	
 	//provided that point is in center of skin
-	//norma3df computed the distance of a vector using cuda math: 
-	// http://docs.nvidia.com/cuda/cuda-math-api/group__CUDA__MATH__SINGLE.html#group__CUDA__MATH__SINGLE_1g613a6370bb45374882479c25405761d0
+	//add the half skin thickness to point p
+	p.x += SKIN_WIDTH / 2;
+	p.y += SKIN_WIDTH / 2;
+	p.z += SKIN_WIDTH / 2;
+	
+	// compute distance from p to sphere center
+	float dist = length(p);
 
-	if (pos < SPHERE_RADIUS)
-		return -p * 1/pos;	// the deeper the skin in the sphere, the bigger the returning power (bounce)
+	if (dist<SPHERE_RADIUS)		// inside sphere
+		p = (p * (SPHERE_RADIUS / dist)) / h;
+	else
+	{
+		p.x = 0;
+		p.y = 0;
+		p.z = 0;
+	}
+
+	return p;
+	
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -36,43 +47,39 @@ __device__ float3 sphereCollision(float3 p, float h)
 __global__ void computeImpacts(float3* oldPos, float3* impacts, float stepsize, float h)
 {
 	// TODO: Positionen der benachbarten Gitterpunkte und des eigenen Gitterpunktes ablesen.
+	
+	
+	int x = blockIdx.x;
+	int y = blockIdx.y;
 
-	/////// Blocks are Streaming Multiprocessors, right? So we are hardly limited by using no threads?
-	/*
-	int dim = blockDim.x * gridDim.y;
-	int offset = blockIdx.x * blockDim.x + blockIdx.y * blockDim.y * dim;
-	float3 pos = oldPos[offset];
-	if (offset - 1 >= 0)
-	{
-	float3 posLeft = oldPos[offset - 1];
-	impacts[offset] += computeImpact << <1, 1 >> > (pos, posLeft, stepsize, h);
+	int index = x * RESOLUTION_Y + y;
+
+	float3 sumImpacts = make_float3(0, 0, 0);
+
+	if ((y - 1) >= 0) {				// top
+		sumImpacts += computeImpact(oldPos[index], oldPos[x * RESOLUTION_Y + (y - 1)], stepsize, h);
 	}
-	if (offset + 1 < gridDim.x)
-	{
-	float3 posRight = oldPos[offset + 1];
-	impacts[offset] += computeImpact << <1, 1 >> > (pos, posRight, stepsize, h);
+	if ((y + 1)< RESOLUTION_Y) {	// bottom
+		sumImpacts += computeImpact(oldPos[index], oldPos[x * RESOLUTION_Y + (y + 1)], stepsize, h);
 	}
-	if (offset - dim >= 0)
-	{
-	float3 posTop = oldPos[offset - dim];
-	impacts[offset] += computeImpact << <1, 1 >> > (pos, posTop, stepsize, h);
+	if ((x - 1) >= 0)  {			// left
+		sumImpacts += computeImpact(oldPos[index], oldPos[(x - 1) * RESOLUTION_Y + y], stepsize, h);
 	}
-	if (offset + dim < gridDim.y)
-	{
-	float3 posBottom = oldPos[offset + dim];
-	impacts[offset] += computeImpact << <1, 1 >> > (pos, posBottom, stepsize, h);
+	if ((x + 1) < RESOLUTION_X) {	// right
+		sumImpacts += computeImpact(oldPos[index], oldPos[(x + 1) * RESOLUTION_Y + y], stepsize, h);
 	}
 	
 	// DONE: Kollisionsbehandlung mit Kugel durchführen.
-	impacts[offset] += sphereCollision << <1, 1 >> > (pos, h);
-	*/
+	sumImpacts += sphereCollision(oldPos[index], h);
+	
 
 	// TODO: Mit jedem Nachbar besteht ein Constraint. Dementsprechend für jeden Nachbar 
 	//		 computeImpact aufrufen und die Ergebnisse aufsummieren.
 		// see above
 	
 
-	// TODO: Die Summe der Kräfte auf "impacts" des eigenen Gitterpunkts addieren.	
+	// TODO: Die Summe der Kräfte auf "impacts" des eigenen Gitterpunkts addieren.
+	impacts[index] += sumImpacts;
 }	
 
 // -----------------------------------------------------------------------------------------------
@@ -83,19 +90,18 @@ __global__ void previewSteps(	float3* newPos, float3* oldPos, float3* impacts, f
 	// TODO: Berechnen, wo wir wären, wenn wir eine Integration von der bisherigen Position 
 	//		 mit der bisherigen Geschwindigkeit und den neuen Impulsen durchführen.
 	//newpos = oldpos + (velocity + impacts * h) * h
-	int dim = blockDim.x * gridDim.y;
-	int index = blockIdx.x * blockDim.x + blockIdx.y * blockDim.y * dim;
-	newPos[index] = oldPos[index] + (velocity[index] + (impacts[index] - make_float3(0, GRAVITY, 0)) * h) * h;
-
+	
+	int index = blockIdx.x * RESOLUTION_Y + blockIdx.y;
+	newPos[index] = oldPos[index] + (velocity[index] + (impacts[index]) * h) * h;
+	
 }
 
 // -----------------------------------------------------------------------------------------------
 // Integrate velocity
 __global__ void integrateVelocity(	float3* impacts, float3* velocity, float h)
 {
-	// TODO: Update velocity.
-	int dim = blockDim.x * gridDim.y;
-	int index = blockIdx.x * blockDim.x + blockIdx.y * blockDim.y * dim;
+	// TODO: Update velocity.	
+	int index = blockIdx.x * RESOLUTION_Y + blockIdx.y;
 	velocity[index] = velocity[index] * LINEAR_DAMPING + (impacts[index] - make_float3(0, GRAVITY, 0)) * h;
 }
 
@@ -111,7 +117,6 @@ void updateCloth(	float3* newPos, float3* oldPos, float3* impacts, float3* veloc
 					float h, float stepsize)
 {
 	dim3 blocks(RESOLUTION_X, RESOLUTION_Y-1, 1);
-	dim3 blocks2(RESOLUTION_X, RESOLUTION_Y - 2, 1);
 
 	// -----------------------------
 	// Clear impacts
@@ -124,11 +129,12 @@ void updateCloth(	float3* newPos, float3* oldPos, float3* impacts, float3* veloc
 		// -----------------------------
 		// TODO: previewSteps Kernel aufrufen (Vorhersagen, wo die Gitterpunkte mit den aktuellen Impulsen landen würden.)
 		// newpos = oldpos + (velocity + impacts * h) * h
-		previewSteps << <blocks2, 1 >> > (newPos, oldPos, impacts, velocity, h);
+		previewSteps << <blocks, 1 >> >(newPos, oldPos, impacts, velocity, h);
 		
 		// -----------------------------
 		// TODO: computeImpacts Kernel aufrufen (Die Impulse neu berechnen, sodass die Constraints besser eingehalten werden.)
 		// impacts += ...
+		computeImpacts << <blocks, 1 >> >(newPos, impacts, stepsize, h);
 
 	}
 

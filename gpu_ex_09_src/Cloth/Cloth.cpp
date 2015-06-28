@@ -12,7 +12,6 @@ void updateCloth(float3* newPos, float3* oldPos, float3* impacts, float3* veloci
 	float deltaTime, float stepsize);
 
 unsigned int memSize = sizeof(float)* 3 * RESOLUTION_X*RESOLUTION_Y;
-unsigned int memSize2 = sizeof(float);
 
 
 ClothSim::ClothSim() : ping(0)
@@ -61,7 +60,7 @@ ClothSim::ClothSim() : ping(0)
 	// DONE: VBO vboNormal erzeugen und mit cudaNormal verknüpfen. Das VBO braucht keine initialen Daten (NULL übergeben).
 	glGenBuffers(1, &vboNormal);
 	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, vboNormal);
-	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, sizeof(float), NULL, GL_DYNAMIC_DRAW_ARB);
+	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, memSize, NULL, GL_DYNAMIC_DRAW_ARB);
 	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 	//Connection to CUDA
 	cudaGraphicsGLRegisterBuffer(&cudaNormal, vboNormal, cudaGraphicsMapFlagsNone);
@@ -99,11 +98,11 @@ void ClothSim::update(GLfloat deltaTime)
 	cudaGraphicsMapResources(1, &cudaNormal);
 
 	// DONE: Pointer auf die Daten von cudaPos[ping] und cudaPos[1-ping] beschaffen. (Hinweis: cudaGraphicsResourceGetMappedPointer)
-	cudaGraphicsResourceGetMappedPointer((void**)oldPos, &memSize, cudaPos[ping]);
-	cudaGraphicsResourceGetMappedPointer((void**)newPos, &memSize, cudaPos[1 - ping]);
+	cudaGraphicsResourceGetMappedPointer((void**)&oldPos, &memSize, cudaPos[ping]);
+	cudaGraphicsResourceGetMappedPointer((void**)&newPos, &memSize, cudaPos[1 - ping]);
 
 	// DONE: Pointer auf die Daten von cudaNormal beschaffen.
-	cudaGraphicsResourceGetMappedPointer((void**)normals, &memSize2, cudaNormal);
+	cudaGraphicsResourceGetMappedPointer((void**)&normals, &memSize, cudaNormal);
 
 	// Launch update
 	float stepSize = 0.5f; // steers how quickly the iterative refinement converges	
