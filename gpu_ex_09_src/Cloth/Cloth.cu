@@ -17,7 +17,17 @@ __device__ float3 computeImpact(float3 me, float3 other, float stepsize, float h
 // Simple collision detection against a sphere at (0,0,0) with radius SPHERE_RADIUS and skin width SKIN_WIDTH.
 __device__ float3 sphereCollision(float3 p, float h)
 {
-	// TODO: Testen, ob Punkt im inneren der Kugel ist. Wenn ja, dann eine Kraft berechnen, die sie wieder heraus bewegt.
+	// Do we need 'h' (integration stepsize)?
+	// DONE: Testen, ob Punkt im inneren der Kugel ist. Wenn ja, dann eine Kraft berechnen, die sie wieder heraus bewegt.
+	float3 pos = 0.f;
+	pos = norm3df((p.x + SKIN_WIDTH / 2), (p.y + SKIN_WIDTH / 2), (p.z + SKIN_WIDTH / 2)); 
+
+	//provided that point is in center of skin
+	//norma3df computed the distance of a vector using cuda math: 
+	// http://docs.nvidia.com/cuda/cuda-math-api/group__CUDA__MATH__SINGLE.html#group__CUDA__MATH__SINGLE_1g613a6370bb45374882479c25405761d0
+
+	if (pos < SPHERE_RADIUS)
+		return -p * 1/pos;	// the deeper the skin in the sphere, the bigger the returning power (bounce)
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -34,27 +44,28 @@ __global__ void computeImpacts(float3* oldPos, float3* impacts, float stepsize, 
 	float3 pos = oldPos[offset];
 	if (offest - 1 >= 0)
 	{
-		float3 posLeft = oldPos[offset - 1];
-		impacts[offset] += computeImpact << <1, 1 >> > (pos, posLeft, stepsize, h);
+	float3 posLeft = oldPos[offset - 1];
+	impacts[offset] += computeImpact << <1, 1 >> > (pos, posLeft, stepsize, h);
 	}
 	if (offset + 1 < gridDim.x)
 	{
-		float3 posRight = oldPos[offset + 1];
-		impacts[offset] += computeImpact << <1, 1 >> > (pos, posRight, stepsize, h);
+	float3 posRight = oldPos[offset + 1];
+	impacts[offset] += computeImpact << <1, 1 >> > (pos, posRight, stepsize, h);
 	}
 	if (offset - dim >= 0)
 	{
-		float3 posTop = oldPos[offset - dim];
-		impacts[offset] += computeImpact << <1, 1 >> > (pos, posTop, stepsize, h);
+	float3 posTop = oldPos[offset - dim];
+	impacts[offset] += computeImpact << <1, 1 >> > (pos, posTop, stepsize, h);
 	}
 	if (offset + dim < gridDim.y)
 	{
-		float3 posBottom = oldPos[offset + dim];
-		impacts[offset] += computeImpact << <1, 1 >> > (pos, posBottom, stepsize, h);
+	float3 posBottom = oldPos[offset + dim];
+	impacts[offset] += computeImpact << <1, 1 >> > (pos, posBottom, stepsize, h);
 	}
+	
+	// DONE: Kollisionsbehandlung mit Kugel durchführen.
+	impacts[offset] += sphereCollision << <1, 1 >> > (pos, h);
 	*/
-	// TODO: Kollisionsbehandlung mit Kugel durchführen.
-
 
 	// TODO: Mit jedem Nachbar besteht ein Constraint. Dementsprechend für jeden Nachbar 
 	//		 computeImpact aufrufen und die Ergebnisse aufsummieren.
