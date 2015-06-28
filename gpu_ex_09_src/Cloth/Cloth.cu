@@ -42,7 +42,7 @@ __global__ void computeImpacts(float3* oldPos, float3* impacts, float stepsize, 
 	int dim = blockDim.x * gridDim.y;
 	int offset = blockIdx.x * blockDim.x + blockIdx.y * blockDim.y * dim;
 	float3 pos = oldPos[offset];
-	if (offest - 1 >= 0)
+	if (offset - 1 >= 0)
 	{
 	float3 posLeft = oldPos[offset - 1];
 	impacts[offset] += computeImpact << <1, 1 >> > (pos, posLeft, stepsize, h);
@@ -82,9 +82,10 @@ __global__ void previewSteps(	float3* newPos, float3* oldPos, float3* impacts, f
 {
 	// TODO: Berechnen, wo wir wären, wenn wir eine Integration von der bisherigen Position 
 	//		 mit der bisherigen Geschwindigkeit und den neuen Impulsen durchführen.
+	//newpos = oldpos + (velocity + impacts * h) * h
 	int dim = blockDim.x * gridDim.y;
 	int index = blockIdx.x * blockDim.x + blockIdx.y * blockDim.y * dim;
-	newPos[index] = oldPos[index] + (velocity[index] + impacts[index] - make_float3(0, GRAVITY, 0) * h) * h;
+	newPos[index] = oldPos[index] + (velocity[index] + (impacts[index] - make_float3(0, GRAVITY, 0)) * h) * h;
 
 }
 
