@@ -56,18 +56,18 @@ __global__ void computeImpacts(float3* oldPos, float3* impacts, float stepsize, 
 
 	float3 sumImpacts = make_float3(0, 0, 0);
 
-	if ((y - 1) >= 0) {				// top
-		sumImpacts += computeImpact(oldPos[index], oldPos[x * RESOLUTION_Y + (y - 1)], stepsize, h);
-	}
-	if ((y + 1)< RESOLUTION_Y) {	// bottom
-		sumImpacts += computeImpact(oldPos[index], oldPos[x * RESOLUTION_Y + (y + 1)], stepsize, h);
-	}
-	if ((x - 1) >= 0)  {			// left
-		sumImpacts += computeImpact(oldPos[index], oldPos[(x - 1) * RESOLUTION_Y + y], stepsize, h);
-	}
-	if ((x + 1) < RESOLUTION_X) {	// right
-		sumImpacts += computeImpact(oldPos[index], oldPos[(x + 1) * RESOLUTION_Y + y], stepsize, h);
-	}
+	if ((y - 1) >= 0) 				// top
+		sumImpacts += computeImpact(oldPos[index], oldPos[index - 1], stepsize, h);
+	
+	if ((y + 1)< RESOLUTION_Y) 		// bottom
+		sumImpacts += computeImpact(oldPos[index], oldPos[index + 1], stepsize, h);
+	
+	if ((x - 1) >= 0)  				// left
+		sumImpacts += computeImpact(oldPos[index], oldPos[index - RESOLUTION_Y], stepsize, h);
+	
+	if ((x + 1) < RESOLUTION_X) 	// right
+		sumImpacts += computeImpact(oldPos[index], oldPos[index + RESOLUTION_Y], stepsize, h);
+	
 	
 	// DONE: Kollisionsbehandlung mit Kugel durchführen.
 	sumImpacts += sphereCollision(oldPos[index], h);
