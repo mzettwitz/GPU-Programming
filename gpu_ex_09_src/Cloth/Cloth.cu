@@ -39,7 +39,6 @@ __device__ float3 sphereCollision(float3 p, float h)
 	}
 
 	return p;
-
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -48,8 +47,6 @@ __device__ float3 sphereCollision(float3 p, float h)
 __global__ void computeImpacts(float3* oldPos, float3* impacts, float stepsize, float h)
 {
 	// DONE: Positionen der benachbarten Gitterpunkte und des eigenen Gitterpunktes ablesen.
-
-
 	int x = blockIdx.x;
 	int y = blockIdx.y;
 
@@ -57,16 +54,16 @@ __global__ void computeImpacts(float3* oldPos, float3* impacts, float stepsize, 
 
 	float3 sumImpacts = make_float3(0, 0, 0);
 
-	if ((y - 1) >= 0) 				// top
+	if (y - 1 >= 0) 				// top
 		sumImpacts += computeImpact(oldPos[index], oldPos[index - 1], stepsize, h);
 
-	if ((y + 1)< RESOLUTION_Y) 		// bottom
+	if (y + 1 < RESOLUTION_Y) 		// bottom
 		sumImpacts += computeImpact(oldPos[index], oldPos[index + 1], stepsize, h);
 
-	if ((x - 1) >= 0)  				// left
+	if (x - 1 >= 0)  				// left
 		sumImpacts += computeImpact(oldPos[index], oldPos[index - RESOLUTION_Y], stepsize, h);
 
-	if ((x + 1) < RESOLUTION_X) 	// right
+	if (x + 1 < RESOLUTION_X) 		// right
 		sumImpacts += computeImpact(oldPos[index], oldPos[index + RESOLUTION_Y], stepsize, h);
 
 
@@ -113,14 +110,13 @@ __global__ void  test(float3* newPos, float3* oldPos, float h)
 	newPos[blockIdx.x] = oldPos[blockIdx.x] + make_float3(0, -h, 0);
 }
 
-// Kernel function compute normal
-__global__ void  normal(float3* normals, float3* position){
-
-
-
+// Approximate normal addicted to neighbors
+__global__ void  computeNormal(float3* normals, float3* position)
+{
 	int x = blockIdx.x;
 	int y = blockIdx.y;
 
+	// index variables
 	int index = x * RESOLUTION_Y + y;
 	int top_pos = index - 1;
 	int bottom_pos = index + 1;
@@ -129,17 +125,11 @@ __global__ void  normal(float3* normals, float3* position){
 
 	float3 normal = make_float3(0, 0, 0);
 
-
-	//Randbehandlung fehlt
-
-	//formula
-	normal = cross((position[top_pos] - position[bottom_pos]), (position[right_pos] - position[left_pos]));
-
-
+	// borders: top, bot, left, right
+	if (y - 1 >= 0 && y + 1 < RESOLUTION_Y && x - 1 >= 0 && x + 1 < RESOLUTION_X) 
+		normal = cross((position[top_pos] - position[bottom_pos]), (position[right_pos] - position[left_pos]));
 
 	normals[index] = normalize(normal);
-
-
 }
 
 // -----------------------------------------------------------------------------------------------
@@ -170,6 +160,7 @@ void updateCloth(float3* newPos, float3* oldPos, float3* impacts, float3* veloci
 
 	// -----------------------------
 	// DONE: Approximieren der Normalen
+	computeNormal << <blocks, 1 >> > (normals, newPos);
 
 	// -----------------------------
 	// DONE: Integrate velocity kernel ausführen
