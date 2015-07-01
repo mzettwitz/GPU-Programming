@@ -2,10 +2,16 @@
 #version 330
 
 in vec2 out_TexCoord;
+in vec3 out_Normal;
 
 out vec4 FragColor;
 
 void main()
 {	
-	FragColor = vec4(out_TexCoord * max(length(dFdx(out_TexCoord)), length(dFdy(out_TexCoord))) * 70, 0.5,1);
+	vec3 n = out_Normal;
+	vec3 l = vec3(0,0,1);
+	float NdotL = abs(dot(n,l));
+	NdotL = NdotL * 0.8 + pow(NdotL,16);
+	vec3 c = (out_TexCoord * max(length(dFdx(out_TexCoord)), length(dFdy(out_TexCoord))) * 70, 0.5) * NdotL;
+	FragColor = vec4(vec3,1);
 }
