@@ -274,7 +274,7 @@ __global__ void boxcarShared3(float* source, float* target)
 
 
 
-			blurredValue /= float((blurRadius + 1)*(2.7f)*(blurRadius + 1));
+			blurredValue /= float((blurRadius + 1)*(sqrtf((blurRadius+1)/2))*(blurRadius + 1));
 			target[pixelX + pixelY * DIM] = blurredValue;		
 	}
 	
