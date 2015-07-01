@@ -6,7 +6,7 @@ in layout(location=1) vec2 in_TexCoord;
 in layout(location=2) vec3 in_Normal;
 
 out vec2 out_TexCoord;
-out vec3 out_Normal:
+out vec3 out_Normal;
 
 layout(std140) uniform GlobalMatrices
 {
