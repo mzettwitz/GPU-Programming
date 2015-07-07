@@ -113,33 +113,52 @@ void initGL()
 }
 
 
-
-//transpose Kernel
-__global__ void traspose(float *dstImage, float *srcImage){
-
-
+// DONE: Transpose kernel
+__global__ void transpose(float *dstImage, float *srcImage)
+{
 	int x = threadIdx.x + blockIdx.x * blockDim.x;
 	int y = threadIdx.y + blockIdx.y * blockDim.y;
-	int index = y + x * N;
+	int index = y + x * gridDim.x;
 
-	int targetIndex = x + y *N;
+	int targetIndex = x + y *gridDim.x;
 
 	dstImage[index] = srcImage[targetIndex];
-
-
 }
 
 
 __global__ void sat_filter(float *dstImage, float *sat, float *srcDepth,
 	float focusDepth, float sizeScale, int n)
 {
-	// TODO: Filtergröße bestimmen
+	int x = threadIdx.x + blockIdx.x * blockDim.x;
+	int y = threadIdx.y + blockIdx.y * blockDim.y;
+	int index = y + x * gridDim.x;
 
-	// TODO: Anzahl der Pixel im Filterkern bestimmen	
+	// DONE: Filtergröße bestimmen
+	int filterSize = int(1.f + sizeScale * fabsf(srcDepth[index] -focusDepth));
 
-	// TODO: SAT-Werte für die Eckpunkte des Filterkerns bestimmen.
+	// DONE: Anzahl der Pixel im Filterkern bestimmen	
+	//see presentation 10 slide 42: w*h 
+	float sumFilter = float(filterSize* filterSize);
 
-	// TODO: Mittelwert berechnen.
+	// DONE: SAT-Werte für die Eckpunkte des Filterkerns bestimmen.
+	float A = sat[index];	// top right
+	float B = 0.f;
+	float C = 0.f;
+	float D = 0.f;
+
+	// borders:
+	// top left
+	if (x - filterSize >= 0)	
+		B = sat[index - filterSize];
+	// bottom right
+	if (y + filterSize < N)
+		C = sat[index + filterSize * blockDim.x];
+	// bottom left
+	if (x - filterSize >= 0 && y + filterSize < N)	
+		D = sat[index - filterSize + filterSize * blockDim.x];
+
+	// DONE: Mittelwert berechnen.
+	dstImage[index] = (A - B - C + D) / sumFilter;
 }
 
 
@@ -233,21 +252,23 @@ void display(void)
 	cudaMemcpy(devDepthPixels, depthPixels, N * N * sizeof(float), cudaMemcpyHostToDevice);
 	dim3 a(N, N, 1);
 
-	// TODO: Scan    
-	// TODO: Transponieren 
+	// DONE: Scan    
+	scan_naive << <N, N >> > (devColorPixelsDst, devColorPixelsSrc, N);
 
-	traspose << <a, 1 >> >(devColorPixelsDst, devColorPixelsSrc); //transposes image only if, #if is set to 1, no idea why, but it works!
+	// DONE: Transponieren 
+	transpose << <a, 1 >> >(devColorPixelsSrc, devColorPixelsDst); //transposes image only if, #if is set to 1, no idea why, but it works! -- of course, otherwise the filter is not activated...
 
-
-	// TODO: Scan  
-	// TODO: Transponieren    
-	// TODO: SAT-Filter anwenden	
+	// DONE: Scan  
+	scan_naive << <N, N >> > (devColorPixelsDst, devColorPixelsSrc, N); //read from transposed matrix, overwrite old source
+ 
+	// DONE: SAT-Filter anwenden
+	sat_filter << <a, 1 >> > (devColorPixelsSrc, devColorPixelsDst, devDepthPixels, focusDepth, sizeScale, N);
 
 	// Ergebnis in Host-Memory kopieren
-	cudaMemcpy(filteredPixels, devColorPixelsDst, N*N * 4, cudaMemcpyDeviceToHost);
+	cudaMemcpy(filteredPixels, devColorPixelsSrc, N*N * 4, cudaMemcpyDeviceToHost); // edited to write copy the correct correct output pointer
 
-	// TODO: Beim #if aus der 0 eine 1 machen, damit das gefilterte Bild angezeigt wird!
-#if 0
+	// DONE: Beim #if aus der 0 eine 1 machen, damit das gefilterte Bild angezeigt wird!
+#if 1
 	// Mittelwert-Bild rendern
 	glDrawPixels(N, N, GL_LUMINANCE, GL_FLOAT, filteredPixels);
 #else
