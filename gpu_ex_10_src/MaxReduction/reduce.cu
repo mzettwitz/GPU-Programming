@@ -40,6 +40,8 @@ __global__ void reduce_max_naive(TYPE* A, int n)
 	A[2*i] = cumax( A[2*i], A[2*i+n]);
 }
 
+
+template <unsigned int blockSize>
 __global__ void reduce_max_not_naive(TYPE* A)
 {
 	//index, extern to specify size at runtime
@@ -50,25 +52,45 @@ __global__ void reduce_max_not_naive(TYPE* A)
 	cache[tid] =  cumax(A[i], A[i + blockDim.x]);
 	__syncthreads();
 
-	for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1)
-	{	
-		if (tid < s)
+	//unrolled loop
+	if (blockSize >= 512)
+	{
+		if (tid < 256)
 		{
-			cache[tid] = cumax(cache[tid], cache[tid + s]);
+			cache[tid] = cumax(cache[tid], cache[tid + 256]);
 		}
 		__syncthreads();
-		
 	}
-
-	/*if (tid < 32)
+	if (blockSize >= 256)
 	{
-		cache[tid] = cumax(cache[tid], cache[tid + 32]);
-		cache[tid] = cumax(cache[tid], cache[tid + 16]);
-		cache[tid] = cumax(cache[tid], cache[tid + 8]);
-		cache[tid] = cumax(cache[tid], cache[tid + 4]);
-		cache[tid] = cumax(cache[tid], cache[tid + 2]);
-		cache[tid] = cumax(cache[tid], cache[tid + 1]);
-	}*/
+		if (tid < 128)
+		{
+			cache[tid] = cumax(cache[tid], cache[tid + 128]);
+		}
+		__syncthreads();
+	}
+	if (blockSize >= 128)
+	{
+		if (tid < 64)
+		{
+			cache[tid] = cumax(cache[tid], cache[tid + 64]);
+		}
+		__syncthreads();
+	}
+	if (tid < 32)
+	{
+		if(blockSize >= 64)cache[tid] = cumax(cache[tid], cache[tid + 32]);
+		__syncthreads();
+		if(blockSize >= 32)cache[tid] = cumax(cache[tid], cache[tid + 16]);
+		__syncthreads();
+		if(blockSize >= 16)cache[tid] = cumax(cache[tid], cache[tid + 8]);
+		__syncthreads();
+		if(blockSize >= 8)cache[tid] = cumax(cache[tid], cache[tid + 4]);
+		__syncthreads();
+		if(blockSize >= 4)cache[tid] = cumax(cache[tid], cache[tid + 2]);
+		__syncthreads();
+		if(blockSize >= 2)cache[tid] = cumax(cache[tid], cache[tid + 1]);
+	}
 
 	if (tid == 0)
 	{
@@ -113,11 +135,10 @@ int main(int argc, char** argv)
 		reduce_max_naive<<<Nh/n,1>>>(d_A, n);	
 
 #else				// Better approach
-	for (int i = 1; i < N; i *=threads)
-	{
-		reduce_max_not_naive << < N / threads/2, threads, sizeof(TYPE) * threads>> >(d_A);
 
-	}
+		reduce_max_not_naive<256> << < N / threads/2, threads, sizeof(TYPE) * threads>> >(d_A);
+		reduce_max_not_naive<256> <<< N / threads/2   , threads, sizeof(TYPE)*threads >> > (d_A);
+	
 #endif
 
 	// End tracking of elapsed time.
