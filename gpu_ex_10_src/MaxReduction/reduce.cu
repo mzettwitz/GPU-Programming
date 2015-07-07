@@ -6,7 +6,7 @@
 // If you use float, don't forget to type %f in the printf later on..
 #define TYPE int
 
-#define USE_NAIVE
+//#define USE_NAIVE
 
 // Variables
 TYPE* h_A;
@@ -40,41 +40,84 @@ __global__ void reduce_max_naive(TYPE* A, int n)
 	A[2*i] = cumax( A[2*i], A[2*i+n]);
 }
 
+__global__ void reduce_max_not_naive(TYPE* A)
+{
+	//index, extern to specify size at runtime
+	extern __shared__ TYPE cache[];
+
+	unsigned int tid = threadIdx.x;
+	unsigned int i = blockIdx.x*(blockDim.x * 2) + threadIdx.x;
+	cache[tid] =  cumax(A[i], A[i + blockDim.x]);
+	__syncthreads();
+
+	for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1)
+	{	
+		if (tid < s)
+		{
+			cache[tid] = cumax(cache[tid], cache[tid + s]);
+		}
+		__syncthreads();
+		
+	}
+
+	/*if (tid < 32)
+	{
+		cache[tid] = cumax(cache[tid], cache[tid + 32]);
+		cache[tid] = cumax(cache[tid], cache[tid + 16]);
+		cache[tid] = cumax(cache[tid], cache[tid + 8]);
+		cache[tid] = cumax(cache[tid], cache[tid + 4]);
+		cache[tid] = cumax(cache[tid], cache[tid + 2]);
+		cache[tid] = cumax(cache[tid], cache[tid + 1]);
+	}*/
+
+	if (tid == 0)
+	{
+		A[blockIdx.x] = cache[0];
+	}
+}
+
 // Host code
 int main(int argc, char** argv)
 {
-    printf("Reduce\n");
-	int N = 1<<15;
+	printf("Reduce\n");
+	int N = 1 << 15;
 	int Nh = N / 2;
-    size_t size = N * sizeof(TYPE);    
+	size_t size = N * sizeof(TYPE);
 
-    // Allocate input vector h_A
-    h_A = (TYPE*)malloc(size);
-   	
-    // Initialize input vector
-    WorstCaseInit(h_A, N);
-   	
-    // Allocate vector in device memory
-    cudaMalloc((void**)&d_A, size);
+	// Allocate input vector h_A
+	h_A = (TYPE*)malloc(size);
 
-    // Copy vector from host memory to device memory
-    cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
-   
+	// Initialize input vector
+	WorstCaseInit(h_A, N);
+
+	// Allocate vector in device memory
+	cudaMalloc((void**)&d_A, size);
+
+	// Copy vector from host memory to device memory
+	cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
+
+	cudaDeviceProp prop;
+	cudaGetDeviceProperties(&prop, 0);
+
+	int maxThreadsPerBlock = prop.maxThreadsPerBlock;
+	int threads = maxThreadsPerBlock /4;
 	// Start tracking of elapsed time.
-	cudaEvent_t     start, stop;		
-	cudaEventCreate( &start );
-	cudaEventCreate( &stop );
-	cudaEventRecord( start, 0 );
+	cudaEvent_t     start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start, 0);
 
 #ifdef USE_NAIVE	// Naive approach
-	
+
 	for (int n=1; n<N; n*=2)
-		reduce_max_naive<<<Nh / n,1>>>(d_A, n);	
+		reduce_max_naive<<<Nh/n,1>>>(d_A, n);	
 
 #else				// Better approach
-	
-	// TODO: Implement!
+	for (int i = 1; i < N; i *=threads)
+	{
+		reduce_max_not_naive << < N / threads/2, threads, sizeof(TYPE) * threads>> >(d_A);
 
+	}
 #endif
 
 	// End tracking of elapsed time.
