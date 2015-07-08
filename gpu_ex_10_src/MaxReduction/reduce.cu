@@ -41,15 +41,24 @@ __global__ void reduce_max_naive(TYPE* A, int n)
 }
 
 
-template <unsigned int blockSize>
+template <unsigned int blockSize,unsigned int loadSize>
 __global__ void reduce_max_not_naive(TYPE* A)
 {
 	//index, extern to specify size at runtime
 	extern __shared__ TYPE cache[];
 
+
 	unsigned int tid = threadIdx.x;
-	unsigned int i = blockIdx.x*(blockDim.x * 2) + threadIdx.x;
-	cache[tid] =  cumax(A[i], A[i + blockDim.x]);
+	unsigned int i = blockIdx.x*(blockDim.x * 8) + threadIdx.x;
+	//during load from global, u
+	cache[tid] = cumax(A[i], A[i + blockDim.x]);
+	cache[tid] = cumax(cache[tid], A[i + blockDim.x * 2]);
+	cache[tid] = cumax(cache[tid], A[i + blockDim.x * 3]);
+	cache[tid] = cumax(cache[tid], A[i + blockDim.x * 4]);
+	cache[tid] = cumax(cache[tid], A[i + blockDim.x * 5]);
+	cache[tid] = cumax(cache[tid], A[i + blockDim.x * 6]);
+	cache[tid] = cumax(cache[tid], A[i + blockDim.x * 7]);
+
 	__syncthreads();
 
 	//unrolled loop
@@ -122,7 +131,9 @@ int main(int argc, char** argv)
 	cudaGetDeviceProperties(&prop, 0);
 
 	int maxThreadsPerBlock = prop.maxThreadsPerBlock;
-	int threads = maxThreadsPerBlock /4;
+	int threads = 64; // 256
+	int gridSize = N / threads / 8;
+
 	// Start tracking of elapsed time.
 	cudaEvent_t     start, stop;
 	cudaEventCreate(&start);
@@ -135,9 +146,25 @@ int main(int argc, char** argv)
 		reduce_max_naive<<<Nh/n,1>>>(d_A, n);	
 
 #else				// Better approach
-
-		reduce_max_not_naive<256> << < N / threads/2, threads, sizeof(TYPE) * threads>> >(d_A);
-		reduce_max_not_naive<256> <<< N / threads/2   , threads, sizeof(TYPE)*threads >> > (d_A);
+	switch (threads)
+	{
+	case 64:
+		reduce_max_not_naive<64> << < gridSize, threads, sizeof(TYPE) * threads >> >(d_A);
+		reduce_max_not_naive<64> << < gridSize, threads, sizeof(TYPE)*threads >> > (d_A);
+		break;
+	case 128:
+		reduce_max_not_naive<128> << < gridSize, threads, sizeof(TYPE) * threads >> >(d_A);
+		reduce_max_not_naive<128> << < gridSize, threads, sizeof(TYPE)*threads >> > (d_A);
+		break;
+	case 256:
+		reduce_max_not_naive<256> << < gridSize, threads, sizeof(TYPE) * threads >> >(d_A);
+		reduce_max_not_naive<256> << < gridSize, threads, sizeof(TYPE)*threads >> > (d_A);
+		break;
+	case 512:
+		reduce_max_not_naive<512> << < gridSize, threads, sizeof(TYPE) * threads >> >(d_A);
+		reduce_max_not_naive<512> << < gridSize, threads, sizeof(TYPE)*threads >> > (d_A);
+		break;
+	}
 	
 #endif
 
