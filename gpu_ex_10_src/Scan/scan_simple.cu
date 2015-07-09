@@ -149,19 +149,16 @@ __global__ void sat_filter(float *dstImage, float *sat, float *srcDepth,
 	int numpixel = (2 * filterSize + min_x - max_x) * (2 * filterSize - max_y + min_y);
 
 	// DONE: SAT-Werte für die Eckpunkte des Filterkerns bestimmen.
+	// top right
+	float A = sat[index + (filterSize - max_x) + (filterSize - max_y) * n];	
 
-
-	float A = sat[index + (filterSize - max_x) + (filterSize - max_y) * n];	// top right
-
-
-
+	//top left
 	float B = sat[index - (filterSize + min_x) + (filterSize - max_y) * n];
 
 	// bottom right
-
 	float C = sat[index + (filterSize - max_x) - (filterSize + min_y) * n];
-	// bottom lef
 
+	// bottom left
 	float D = sat[index - (filterSize + min_x) - (filterSize + min_y) * n];
 
 	// DONE: Mittelwert berechnen.
@@ -302,22 +299,20 @@ void display(void)
 	// DONE: Scan    
 	scan_naive << <N, N >> > (devColorPixelsDst, devColorPixelsSrc, N);
 
-
 	// DONE: Transponieren 
-	transpose << <a, 1 >> >(devColorPixelsSrc, devColorPixelsDst); //transposes image only if, #if is set to 1, no idea why, but it works! -- of course, otherwise the filter is not activated... mähhhhhhh :P
+	transpose << <a, 1 >> >(devColorPixelsSrc, devColorPixelsDst);
 
 	// DONE: Scan  
-	scan_naive << <N, N >> > (devColorPixelsDst, devColorPixelsSrc, N); //read from transposed matrix, overwrite old source
+	scan_naive << <N, N >> > (devColorPixelsDst, devColorPixelsSrc, N);
 
-
-	//DONE : Transponieren
+	// DONE: Transponieren (coordinates have to be in the correct relation for the SAT-Filter, otherweise they have to be transposed in the filter
 	transpose << <a, 1 >> >(devColorPixelsSrc, devColorPixelsDst);
 
 	// DONE: SAT-Filter anwenden
 	sat_filter << <N, N >> > (devColorPixelsDst, devColorPixelsSrc, devDepthPixels, focusDepth, sizeScale, N);
 
 	// Ergebnis in Host-Memory kopieren
-	cudaMemcpy(filteredPixels, devColorPixelsDst, N*N * 4, cudaMemcpyDeviceToHost); // edited to write copy the correct correct output pointer
+	cudaMemcpy(filteredPixels, devColorPixelsDst, N*N * 4, cudaMemcpyDeviceToHost);
 
 	// DONE: Beim #if aus der 0 eine 1 machen, damit das gefilterte Bild angezeigt wird!
 #if 1

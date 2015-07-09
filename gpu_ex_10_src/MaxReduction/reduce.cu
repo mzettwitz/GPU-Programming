@@ -142,7 +142,7 @@ int main(int argc, char** argv)
 	// Copy vector from host memory to device memory
 	cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
 
-	int threads = 128; // 256
+	int threads = 64; //128
 	int load = 8;
 	int gridSize = N / threads / load;
 
