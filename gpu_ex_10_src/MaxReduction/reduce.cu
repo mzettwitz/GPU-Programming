@@ -49,15 +49,30 @@ __global__ void reduce_max_not_naive(TYPE* A)
 
 
 	unsigned int tid = threadIdx.x;
-	unsigned int i = blockIdx.x*(blockDim.x * 8) + threadIdx.x;
+	unsigned int i = blockIdx.x*(blockDim.x * loadSize) + threadIdx.x;
 	//during load from global, u
 	cache[tid] = cumax(A[i], A[i + blockDim.x]);
-	cache[tid] = cumax(cache[tid], A[i + blockDim.x * 2]);
-	cache[tid] = cumax(cache[tid], A[i + blockDim.x * 3]);
-	cache[tid] = cumax(cache[tid], A[i + blockDim.x * 4]);
-	cache[tid] = cumax(cache[tid], A[i + blockDim.x * 5]);
-	cache[tid] = cumax(cache[tid], A[i + blockDim.x * 6]);
-	cache[tid] = cumax(cache[tid], A[i + blockDim.x * 7]);
+	if (loadSize > 2){
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 2]);
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 3]);
+	}
+	if (loadSize > 4){
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 4]);
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 5]);
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 6]);
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 7]);
+	}
+	if (loadSize > 8)
+	{
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 8]);
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 9]);
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 10]);
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 11]);
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 12]);
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 13]);
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 14]);
+		cache[tid] = cumax(cache[tid], A[i + blockDim.x * 15]);
+	}
 
 	__syncthreads();
 
@@ -127,12 +142,9 @@ int main(int argc, char** argv)
 	// Copy vector from host memory to device memory
 	cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
 
-	cudaDeviceProp prop;
-	cudaGetDeviceProperties(&prop, 0);
-
-	int maxThreadsPerBlock = prop.maxThreadsPerBlock;
-	int threads = 64; // 256
-	int gridSize = N / threads / 8;
+	int threads = 128; // 256
+	int load = 8;
+	int gridSize = N / threads / load;
 
 	// Start tracking of elapsed time.
 	cudaEvent_t     start, stop;
@@ -149,20 +161,20 @@ int main(int argc, char** argv)
 	switch (threads)
 	{
 	case 64:
-		reduce_max_not_naive<64> << < gridSize, threads, sizeof(TYPE) * threads >> >(d_A);
-		reduce_max_not_naive<64> << < gridSize, threads, sizeof(TYPE)*threads >> > (d_A);
+		reduce_max_not_naive<64,8> << < gridSize, threads, sizeof(TYPE) * threads >> >(d_A);
+		reduce_max_not_naive<64,8> << < gridSize, threads, sizeof(TYPE)*threads >> > (d_A);
 		break;
 	case 128:
-		reduce_max_not_naive<128> << < gridSize, threads, sizeof(TYPE) * threads >> >(d_A);
-		reduce_max_not_naive<128> << < gridSize, threads, sizeof(TYPE)*threads >> > (d_A);
+		reduce_max_not_naive<128,8> << < gridSize, threads, sizeof(TYPE) * threads >> >(d_A);
+		reduce_max_not_naive<128,8> << < gridSize, threads, sizeof(TYPE)*threads >> > (d_A);
 		break;
 	case 256:
-		reduce_max_not_naive<256> << < gridSize, threads, sizeof(TYPE) * threads >> >(d_A);
-		reduce_max_not_naive<256> << < gridSize, threads, sizeof(TYPE)*threads >> > (d_A);
+		reduce_max_not_naive<256,8> << < gridSize, threads, sizeof(TYPE) * threads >> >(d_A);
+		reduce_max_not_naive<256,8> << < gridSize, threads, sizeof(TYPE)*threads >> > (d_A);
 		break;
 	case 512:
-		reduce_max_not_naive<512> << < gridSize, threads, sizeof(TYPE) * threads >> >(d_A);
-		reduce_max_not_naive<512> << < gridSize, threads, sizeof(TYPE)*threads >> > (d_A);
+		reduce_max_not_naive<512,8> << < gridSize, threads, sizeof(TYPE) * threads >> >(d_A);
+		reduce_max_not_naive<512,8> << < gridSize, threads, sizeof(TYPE)*threads >> > (d_A);
 		break;
 	}
 	
